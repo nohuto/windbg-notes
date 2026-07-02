@@ -1,7 +1,9 @@
-# [WinDbg Cheat Sheet](https://github.com/nohuto/windbg-notes/blob/main/assets/WinDbg-CheatSheet.pdf)
+# WinDbg Cheat Sheet
 
 <iframe
   src="https://cdn.jsdelivr.net/gh/nohuto/windbg-notes@main/assets/WinDbg-CheatSheet.pdf"
   width="100%"
-  height="900">
+  style="height: 80dvh">
 </iframe>
+
+Download link: [windbg-notes/assets/WinDbg-CheatSheet.pdf](https://github.com/nohuto/windbg-notes/blob/main/assets/WinDbg-CheatSheet.pdf)
