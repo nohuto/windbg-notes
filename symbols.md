@@ -16,7 +16,7 @@ fffff801`890e82d5  00                                               .
 
 ### Mass Display Symbols
 
-My old [`disp-sym.ps1`]() script can be used to mass read symbols from a module, but its use is very limited as it reads every symbol with the same size, the only actual useful case for it would be to read `nt` symbols, as almost all symbols within [CmControlVector](https://noverse.dev/docs/win-config/system/kernel-values/#cmcontrolvector) have the same size (4 bytes).
+My old [`disp-sym.ps1`](https://github.com/nohuto/windbg-notes/blob/main/assets/disp-sym.ps1) script can be used to mass read symbols from a module, but its use is very limited as it reads every symbol with the same size, the only actual useful case for it would be to read `nt` symbols, as almost all symbols within [CmControlVector](https://noverse.dev/docs/win-config/system/kernel-values/#cmcontrolvector) have the same size (4 bytes).
 
 | Button | Description |
 | --- | --- |
@@ -28,7 +28,7 @@ My old [`disp-sym.ps1`]() script can be used to mass read symbols from a module,
 | `1` | Length size, default is `1`, it might not work properly with a length of `8 <` |
 | `dd` | Type of how the data should be displayed |
 
-![]()
+![](https://github.com/nohuto/windbg-notes/blob/main/assets/disp-sym.png?raw=true)
 
 ### Data Sizes
 
