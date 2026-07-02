@@ -9,12 +9,22 @@ lkd> dt nt!_ETHREAD Tcb
 
 As `_KTHREAD` begins at offset `0`, the `_ETHREAD` and its embedded `_KTHREAD` have the same address, means commands such as `!thread` expect the `_ETHREAD` address (usually called the thread address).
 
-## Find a Thread
+## Thread Address
 
 List all active processes with minimal information:
 
 ```c
 !process 0 0
+```
+
+The first argument selects the process, `0` lists all active processes,  `-1` displays only the current process.
+
+```c
+lkd> !process -1 0
+PROCESS ffffd58e23f02080
+    SessionId: none  Cid: 0004    Peb: 00000000  ParentCid: 0000
+    DirBase: 001ae000  ObjectTable: ffffa98e5d657580  HandleCount: 2001.
+    Image: System
 ```
 
 Filter the list by the executable name:
