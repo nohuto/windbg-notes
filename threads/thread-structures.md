@@ -1,7 +1,11 @@
 # Thread Structures
 
+`_ETHREAD` (E = executive) is the executive thread object and extends the embedded `_KTHREAD` (K = kernel) with executive thread management state,`_KTHREAD` is the kernel thread control block used by the dispatcher and scheduler. Whenever you only want to see specific fields, you can add them behind the address, e.g.:
 
-`_ETHREAD` is the executive thread object and extends the embedded `_KTHREAD` with executive thread management state,`_KTHREAD` is the kernel thread control block used by the dispatcher and scheduler. Whenever you only want to see specific fields, you can add them behind the address, e.g.:
+- Executive = upper layer of ntoskrnl including components like CM, process/power/I/O/PnP/memory/cache manager etc.
+- Kernel = lower layer of ntoskrnl used for e.g. thread scheduling, synchronization services (used by executive components)
+
+See Windows Interals [Chapter 2, System architecture](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf) for more details on them.
 
 ```c
 dt nt!_KTHREAD <thread address> QuantumReset QuantumTarget
