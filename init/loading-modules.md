@@ -1,6 +1,4 @@
-# Initialization
-
-## Loading Modules
+# Loading Modules
 
 Use [`lm l`](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/lm--list-loaded-modules-) to lists modules whose symbols are currently loaded, if you're in a LKD session `nt` will be already loaded.
 
@@ -34,34 +32,4 @@ Unload the symbols for a module:
 
 ```c
 .reload /u mmcss.sys
-```
-
-## Noisy Symbol Loading
-
-See your current noisy loading settings via:
-
-```c
-lkd> !sym
-!sym <noisy/quiet - prompts/prompts off> - quiet mode - symbol prompts on
-```
-
-[`!sym noisy`](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-sym) is used for enabling noisy symbol loading, which is useful whenever loading fails.
-
-```c
-!sym noisy
-.reload /f <module>
-
-!sym quiet // normal output
-```
-
-## Symbol Server
-
-You can either set it via WinDbg, or as environment variable.
-
-```powershell
-$env:_NT_SYMBOL_PATH = 'srv*C:\Symbols*https://msdl.microsoft.com/download/symbols'
-```
-
-```c
-.sympath srv*C:\Symbols*https://msdl.microsoft.com/download/symbols
 ```

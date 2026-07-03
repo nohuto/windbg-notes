@@ -1,63 +1,4 @@
-# Symbols
-
-Symbols include variable names (local/global), functions, and any entry point into a module.
-
-## Reading Symbols
-
-A global variable can be read directly through `module!symbol`, if the PDB doesn't include symbol, then the same can be read using its RVA + `DriverStart`. Examples from '[MMCSS Values](https://noverse.dev/docs/win-config/system/mmcss-values/)' section:
-
-```c
-lkd> dd mmcss!CiSystemResponsiveness L1
-fffff801`890e82f8  00000014
-
-lkd> db mmcss!CiSchedulerDisallowLazyMode L1
-fffff801`890e82d5  00                                               .
-```
-
-### Mass Display Symbols
-
-My old [`disp-sym.ps1`](https://github.com/nohuto/windbg-notes/blob/main/assets/disp-sym.ps1) script can be used to mass read symbols from a module, but its use is very limited as it reads every symbol with the same size, the only actual useful case for it would be to read `nt` symbols, as almost all symbols within [CmControlVector](https://noverse.dev/docs/win-config/system/kernel-values/#cmcontrolvector) have the same size (4 bytes).
-
-| Button | Description |
-| --- | --- |
-| `New KD Session` | Starts a new Kernel Debugging (KD) session with `-kl` param |
-| `Remove Dumps` | Removes all folders in `$env:localappdata\Noverse\Symbols` |
-| `Reload Modules` | Reloads all modules using `.reload /f`, then lists the loaded modules with `lm` |
-| `Phase Folder` | Opens `$env:localappdata\Noverse\Symbols`<br>Each `.txt` file is saved in its module folder using such a structure:<br> - `<module>-Symbols.txt`<br> - `<module>-Filtered.txt`<br> - `<module>-KD.txt`<br> - `<module>-Dump.txt` |
-| `Dump` | Reads all symbols of the current selected module and writes them to the files |
-| `1` | Length size, default is `1`, it might not work properly with a length of `8 <` |
-| `dd` | Type of how the data should be displayed |
-
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/disp-sym.png?raw=true)
-
-### Data Sizes
-
-| Size | WinDbg |
-| --- | --- |
-| 1 byte | `db <symbol/address> L1` |
-| 2 bytes |`dw <symbol/address> L1` |
-| 4 bytes | `dd <symbol/address> L1` |
-| 8 bytes | `dq <symbol/address> L1` |
-
-First see whether the PDB shows type information:
-
-```c
-x /t <module>!<symbol>
-?? sizeof(<module>!<symbol>)
-```
-
-Public symbols often show a globals name without its type, when that happens use the data definition in IDA, e.g. `KiSerializeTimerExpiration` is a 4 byte value, so read it with `dd`.
-
-```c
-lkd> x /t mmcss!CiSystemResponsiveness
-fffff805`284482f8 <NoType> mmcss!CiSystemResponsiveness = <no type information>
-```
-
-```c
-ALMOSTRO:0000000140D1D03C KiSerializeTimerExpiration dd 1
-```
-
-## RVA + DriverStart
+# RVA + DriverStart
 
 An RVA (*Relative Virtual Address*) is an offset from a module's image base, it stays the same when ASLR relocates the image, while the absolute virtual address changes.
 
@@ -68,7 +9,7 @@ runtime address = DriverStart + RVA
 
 This is useful whenever you want to read the current state of a global variable that is not available by name in WinDbg. See the [MMCSS values RVA calculation](https://noverse.dev/docs/win-config/system/mmcss-values/#driverstart--rvas) as a practical example.
 
-### RVA in IDA
+## RVA in IDA
 
 For example, IDA shows `CiSystemResponsiveness` at:
 
@@ -82,7 +23,7 @@ The IDA database image base is `0x1C0000000` (shown under `Edit > Segments > Reb
 RVA = 0x1C00082F8 - 0x1C0000000 = 0x82F8
 ```
 
-### DriverStart
+## DriverStart
 
 `DriverStart` ("*Points to the base virtual address where the driver image is loaded in system memory. This address represents the beginning of the driver's code section in the kernel address space. The I/O manager sets this value when the driver is loaded.*") is the address at which the image is loaded in the current system. The simplest way to get it is the via module start address shown by `lm`:
 
@@ -109,7 +50,7 @@ lkd> dt nt!_DRIVER_OBJECT ffffac819f21fe30 DriverStart
    +0x018 DriverStart : 0xfffff800`50950000 Void
 ```
 
-#### _DRIVER_OBJECT Structure
+### _DRIVER_OBJECT Structure
 
 ```c
 lkd> dt _DRIVER_OBJECT
@@ -131,7 +72,7 @@ ntdll!_DRIVER_OBJECT
    +0x070 MajorFunction    : [28] Ptr64     long 
 ```
 
-### Calculate Runtime Address
+## Calculate Runtime Address
 
 Add the RVA from IDA to `DriverStart`:
 
