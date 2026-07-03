@@ -2,6 +2,10 @@
 
 Thread activity = what a thread is currently doing and how much execution time (UM/KM) it has used.
 
+There's no actual need to see the activity via WinDbg, use [System Informer](), open the properties of a process, go into the *Threads* section, choose columns *Kernel time*, *User time*, *State* (this can show [`_KTHREAD_STATE`](https://noverse.dev/docs/windbg-notes/threads/thread-activity/#_kthread_state)/[_KWAIT_REASON`](https://noverse.dev/docs/windbg-notes/threads/thread-activity/#_kwait_reason) depending on whenever the thread is waiting).
+
+![](https://github.com/nohuto/windbg-notes/blob/main/assets/si-activity.png?raw=true)
+
 ## User Mode
 
 Attach WinDbg to the process, then list its threads using `~`:
@@ -58,7 +62,7 @@ Each line shows the thread index (assigned by debugger), `PID.TID`, suspend coun
 
 ## Kernel Mode
 
-See '[Thread Address](./thread-address.md)' for understanding how to get the `_ETHREAD` address.
+See '[Thread Address](https://noverse.dev/docs/windbg-notes/threads/thread-address/)' for understanding how to get the `_ETHREAD` address.
 
 ```c
 lkd> !process 0 0 CPUSTRES.exe
@@ -144,7 +148,7 @@ lkd> !thread ffffd88863435080 2
 THREAD ffffd88863435080  Cid 2064.1a00  Teb: 0000000000ebd000 Win32Thread: 0000000000000000 RUNNING on processor 5
 ```
 
-Or see the current `State` via:
+Or see the current `State` of a thread via:
 
 ```c
 lkd> dt nt!_KTHREAD ffffd88863435080 State
@@ -202,7 +206,7 @@ lkd> dt nt!_KWAIT_REASON
    MaximumWaitReason = 0n42
 ```
 
-See the current `WaitReason` via:
+See the current `WaitReason` of a thread via:
 
 ```c
 lkd> dt nt!_KTHREAD ffffd88863435080 WaitReason

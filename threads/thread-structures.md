@@ -7,61 +7,6 @@
 dt nt!_KTHREAD <thread address> QuantumReset QuantumTarget
 ```
 
-## [QuantumReset Example](https://noverse.dev/docs/win-config/system/priority-separation/#threads-quantumreset)
-
-Example of looking at the `QuantumReset` field.
-
-```c
-// 0x18
-lkd> db PspForegroundQuantum L3
-fffff805`45954bec  24 24 24                                         $$$
-
-lkd> !process 0 4 CPUSTRES.exe
-PROCESS ffff8084c5d5f080
-    SessionId: 1  Cid: 1644    Peb: 00f27000  ParentCid: 0b8c
-    DirBase: 73a73e000  ObjectTable: ffffdb8a6c01fc40  HandleCount: 201.
-    Image: CPUSTRES.EXE
-
-        THREAD ffff8084c125d080  Cid 1644.1694  Teb: 0000000000f29000 Win32Thread: ffff8084c4f9ec90 WAIT
-        THREAD ffff8084c0ced080  Cid 1644.272c  Teb: 0000000000f2d000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffff8084c23ba300  Cid 1644.1630  Teb: 0000000000f31000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffff8084be291080  Cid 1644.0e10  Teb: 0000000000f35000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffff8084c293e080  Cid 1644.15d4  Teb: 0000000000f39000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffff8084be31f080  Cid 1644.0d28  Teb: 0000000000f3d000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffff8084c06c1080  Cid 1644.14e0  Teb: 0000000000f41000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffff8084bf5be080  Cid 1644.14bc  Teb: 0000000000f45000 Win32Thread: 0000000000000000 WAIT
-
-lkd> dt _KTHREAD ffff8084c125d080 QuantumReset
-   +0x28b QuantumReset : 0x24 '$'
-
-// 0x2 (default)
-lkd> db PspForegroundQuantum L3
-fffff800`56354bec  06 0c 12                                         ...
-
-lkd> !process 0 4 CPUSTRES.exe
-PROCESS ffffd687c63fb380
-    SessionId: 1  Cid: 09d4    Peb: 011dd000  ParentCid: 0fd0
-    DirBase: 7862de000  ObjectTable: ffffe6886846cc40  HandleCount: 197.
-    Image: CPUSTRES.EXE
-
-        THREAD ffffd687c48a8080  Cid 09d4.1ad4  Teb: 00000000011df000 Win32Thread: ffffd687c6c95ed0 WAIT
-        THREAD ffffd687c5949080  Cid 09d4.195c  Teb: 00000000011e3000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffffd687c2269140  Cid 09d4.19a4  Teb: 00000000011e7000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffffd687c43460c0  Cid 09d4.1a28  Teb: 00000000011eb000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffffd687c43350c0  Cid 09d4.13d0  Teb: 00000000011ef000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffffd687c70020c0  Cid 09d4.1018  Teb: 00000000011f3000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffffd687c6e75080  Cid 09d4.1b18  Teb: 00000000011f7000 Win32Thread: 0000000000000000 WAIT
-        THREAD ffffd687c4f8f080  Cid 09d4.1b34  Teb: 00000000011fb000 Win32Thread: 0000000000000000 WAIT
-
-lkd> dt _KTHREAD ffffd687c48a8080 QuantumReset
-nt!_KTHREAD
-   +0x28b QuantumReset : 0x6 '' // BG
-
-lkd> .sleep 0n3000; dt _KTHREAD ffffd687c48a8080 QuantumReset
-nt!_KTHREAD
-   +0x28b QuantumReset : 0x12 '' // FG
-```
-
 ## _ETHREAD Structure
 
 ```c
@@ -434,4 +379,59 @@ lkd> dt nt!_KTHREAD
    +0x463 Spare31          : [1] UChar
    +0x464 Spare32          : Uint4B
    +0x468 EndPadding       : [3] Uint8B
+```
+
+### [QuantumReset Example](https://noverse.dev/docs/win-config/system/priority-separation/#threads-quantumreset)
+
+Example of looking at the `QuantumReset` field.
+
+```c
+// 0x18
+lkd> db PspForegroundQuantum L3
+fffff805`45954bec  24 24 24                                         $$$
+
+lkd> !process 0 4 CPUSTRES.exe
+PROCESS ffff8084c5d5f080
+    SessionId: 1  Cid: 1644    Peb: 00f27000  ParentCid: 0b8c
+    DirBase: 73a73e000  ObjectTable: ffffdb8a6c01fc40  HandleCount: 201.
+    Image: CPUSTRES.EXE
+
+        THREAD ffff8084c125d080  Cid 1644.1694  Teb: 0000000000f29000 Win32Thread: ffff8084c4f9ec90 WAIT
+        THREAD ffff8084c0ced080  Cid 1644.272c  Teb: 0000000000f2d000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffff8084c23ba300  Cid 1644.1630  Teb: 0000000000f31000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffff8084be291080  Cid 1644.0e10  Teb: 0000000000f35000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffff8084c293e080  Cid 1644.15d4  Teb: 0000000000f39000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffff8084be31f080  Cid 1644.0d28  Teb: 0000000000f3d000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffff8084c06c1080  Cid 1644.14e0  Teb: 0000000000f41000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffff8084bf5be080  Cid 1644.14bc  Teb: 0000000000f45000 Win32Thread: 0000000000000000 WAIT
+
+lkd> dt _KTHREAD ffff8084c125d080 QuantumReset
+   +0x28b QuantumReset : 0x24 '$'
+
+// 0x2 (default)
+lkd> db PspForegroundQuantum L3
+fffff800`56354bec  06 0c 12                                         ...
+
+lkd> !process 0 4 CPUSTRES.exe
+PROCESS ffffd687c63fb380
+    SessionId: 1  Cid: 09d4    Peb: 011dd000  ParentCid: 0fd0
+    DirBase: 7862de000  ObjectTable: ffffe6886846cc40  HandleCount: 197.
+    Image: CPUSTRES.EXE
+
+        THREAD ffffd687c48a8080  Cid 09d4.1ad4  Teb: 00000000011df000 Win32Thread: ffffd687c6c95ed0 WAIT
+        THREAD ffffd687c5949080  Cid 09d4.195c  Teb: 00000000011e3000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffffd687c2269140  Cid 09d4.19a4  Teb: 00000000011e7000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffffd687c43460c0  Cid 09d4.1a28  Teb: 00000000011eb000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffffd687c43350c0  Cid 09d4.13d0  Teb: 00000000011ef000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffffd687c70020c0  Cid 09d4.1018  Teb: 00000000011f3000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffffd687c6e75080  Cid 09d4.1b18  Teb: 00000000011f7000 Win32Thread: 0000000000000000 WAIT
+        THREAD ffffd687c4f8f080  Cid 09d4.1b34  Teb: 00000000011fb000 Win32Thread: 0000000000000000 WAIT
+
+lkd> dt _KTHREAD ffffd687c48a8080 QuantumReset
+nt!_KTHREAD
+   +0x28b QuantumReset : 0x6 '' // BG
+
+lkd> .sleep 0n3000; dt _KTHREAD ffffd687c48a8080 QuantumReset
+nt!_KTHREAD
+   +0x28b QuantumReset : 0x12 '' // FG
 ```
