@@ -1,4 +1,4 @@
-# WinDbg Cheat Sheet
+# Cheat Sheet
 
 <iframe
   src="https://cdn.jsdelivr.net/gh/nohuto/windbg-notes@main/assets/WinDbg-CheatSheet.pdf"

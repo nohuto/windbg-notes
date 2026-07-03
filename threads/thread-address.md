@@ -54,7 +54,7 @@ PROCESS ffffac819fc75080
         THREAD ffffac819f996080  Cid 20f4.11c8  Teb: 0000000000ef3000 Win32Thread: 0000000000000000 WAIT
 ```
 
-The first address following `THREAD` is the `_ETHREAD` address (`ffffac819fb18080`), `Cid` includes the PID (process ID) & TID (thread ID) in hexadecimal (`20f4.1e10` = PID.TID), TEB = Thread Environment Block, you can dump it's structure using `!teb`/`dt _TEB <TEB address>`. A thread can also be found directly via its TID using `-t`:
+The address after `THREAD` is that threads `_ETHREAD` address, e.g. `ffffac819fb18080` = `1e10` `_ETHREAD`. `Cid` includes the PID (process ID) & TID (thread ID) in hexadecimal (`20f4.1e10` = PID.TID). TEB = Thread Environment Block, you can dump it's structure using `!teb`/`dt _TEB <TEB address>`. A thread can also be found directly via its TID using `-t`:
 
 ```c
 lkd> !thread -t 1e10
