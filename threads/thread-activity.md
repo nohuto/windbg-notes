@@ -88,7 +88,7 @@ lkd> dt nt!_KTHREAD ffffd8886cbd2080 CycleTime
 
 ### System Idle Process
 
-The *System Idle Process* (`PID 0`) is a "special" process used to shows unused CPU capacity. It has one idle thread per logical processor, each processors `_KPRCB` (shown by `!pcr`) points to its idle thread, which runs only when that processor has no other thread to execute.
+The *System Idle Process* (`PID 0`) is a fake process used account for idle CPU cycle. It has one idle thread per logical processor, each processors `_KPRCB` (shown by `!pcr`) points to its idle thread, which runs only when that processor has no other thread to execute.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/assets/idle-process-cycles.png?raw=true)
 
