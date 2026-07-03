@@ -110,7 +110,7 @@ Unable to get context for thread running on processor 5, HRESULT 0x80004001
 
 ### _KTHREAD_STATE
 
-The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait. The `_KTHREAD_STATE` values shown by the kernel symbols are:
+The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait.
 
 ```c
 lkd> dt nt!_KTHREAD_STATE
