@@ -86,6 +86,35 @@ lkd> dt nt!_KTHREAD ffffd8886cbd2080 CycleTime
    +0x048 CycleTime : 0x00000018`031c8e7c // 103,131,418,236
 ```
 
+### System Idle Process
+
+The *System Idle Process* (`PID 0`) is a "special" process used to shows unused CPU capacity. It has one idle thread per logical processor, each processors `_KPRCB` (shown by `!pcr`) points to its idle thread, which runs only when that processor has no other thread to execute.
+
+![](https://github.com/nohuto/windbg-notes/blob/main/assets/idle-process-cycles.png?raw=true)
+
+```c
+lkd> !pcr 8
+KPCR for Processor 8 at ffffd400306d3000:
+	               Prcb: ffffd400306d3180
+
+lkd> dt nt!_KPRCB ffffd400306d3180 CurrentThread NextThread IdleThread
+   +0x008 CurrentThread : 0xffffc184`0b805080 _KTHREAD
+   +0x010 NextThread    : (null)
+   +0x018 IdleThread    : 0xffffc184`ff755040 _KTHREAD
+
+lkd> dt nt!_KTHREAD ffffc184ff755040 Process CycleTime UserTime KernelTime Priority
+   +0x048 CycleTime  : 0x000009dc`fdbdeb0b
+   +0x0c3 Priority   : 0
+   +0x220 Process    : 0xfffff800`0b349f40 _KPROCESS
+   +0x28c KernelTime : 0x31173
+   +0x2dc UserTime   : 0
+
+lkd> dt nt!_EPROCESS fffff8000b349f40 UniqueProcessId ImageFileName ActiveThreads
+   +0x440 UniqueProcessId : (null) 
+   +0x5a8 ImageFileName   : [15]  "Idle"
+   +0x5f0 ActiveThreads   : 0
+```
+
 ## User Mode
 
 Attach WinDbg to the process, then list its threads using `~`:
