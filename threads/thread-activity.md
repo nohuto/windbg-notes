@@ -22,13 +22,13 @@ lkd> dt nt!_KTHREAD ffffd8886cbd2080 KernelTime
    +0x28c KernelTime : 2
 ```
 
-There's no actual need to see the activity via WinDbg, use [System Informer](), open the properties of a process, go into the *Threads* section, choose columns *Kernel time*, *User time*, *State* (this can show [`_KTHREAD_STATE`](https://noverse.dev/docs/windbg-notes/threads/thread-activity/#_kthread_state)/[`_KWAIT_REASON`](https://noverse.dev/docs/windbg-notes/threads/thread-activity/#_kwait_reason) depending on whenever the thread is waiting).
+There's no actual need to see the activity via WinDbg, use [System Informer](https://github.com/winsiderss/systeminformer/releases), open the properties of a process, go into the *Threads* section, choose columns *Kernel time*, *User time*, *State* (this can show [`_KTHREAD_STATE`](https://noverse.dev/docs/windbg-notes/threads/thread-activity/#_kthread_state)/[`_KWAIT_REASON`](https://noverse.dev/docs/windbg-notes/threads/thread-activity/#_kwait_reason) depending on whenever the thread is waiting).
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/assets/si-activity.png?raw=true)
 
 ## CPU Time & Cycles
 
-`User time` & `Kernel time` (see above to understand how they're getting calculated) are cumulative clock intervals counted to a thread in UM/KM (they don't include time spent waiting). On a tickless system clock interrupts can be suppressed, so these values may remain at `0` while a thread is running. [`CycleTime`](https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-querythreadcycletime) is the cumulative number of CPU clock cycles used by the thread in UM/KM, you can't really see the "live" delta via WinDbg.
+`User time` & `Kernel time` (see above to understand how they're getting calculated) are cumulative clock intervals counted to a thread in UM/KM (they don't include time spent waiting). [`CycleTime`](https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-querythreadcycletime) is the cumulative number of CPU clock cycles used by the thread in UM/KM, you can't really see the "live" delta via WinDbg.
 
 | System Informer | Meaning |
 | --- | --- |
