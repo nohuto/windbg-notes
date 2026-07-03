@@ -19,20 +19,7 @@ Attach WinDbg to the process, then list its threads using `~`:
 .  6  Id: 2064.1eb4 Suspend: 1 Teb: 00eef000 Unfrozen
 ```
 
-Each line shows the thread index (assigned by debugger), `PID.TID`, suspend count, TEB address & debugger freeze state.
-
-| Command | Information |
-| --- | --- |
-| `~` | All threads in the current process |
-| `~.` | Current thread |
-| `~#` | Thread that caused the current debug event |
-| `~<index>k` | Stack of one thread without changing the current thread |
-| `~<index>s` | Select one thread |
-| `~~[<TID>]s` | Select a thread by system TID |
-| `~*k` | Stack of every thread in the current process |
-| `!runaway 7` | Accumulated UM time, KM time & elapsed time for every thread |
-| `!findstack <symbol> 1` | Threads whose stacks contain a symbol or module |
-| `!analyze -hang` | Analyze stacks for threads blocking other threads |
+Each line shows the thread index (assigned by debugger), `PID.TID`, suspend count, TEB address & debugger freeze state. See '[Cheat Sheet](https://noverse.dev/docs/windbg-notes/cheat-sheet/)' for more related commands.
 
 [`!runaway 7`](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-runaway) is useful for seeing a CPU consuming thread (values are cumulative).
 
