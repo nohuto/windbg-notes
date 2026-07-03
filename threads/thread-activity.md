@@ -28,7 +28,7 @@ There's no actual need to see the activity via WinDbg, use [System Informer](htt
 
 ## CPU Time & Cycles
 
-`User time` & `Kernel time` (see above to understand how they're getting calculated) are cumulative clock intervals counted to a thread in UM/KM (they don't include time spent waiting). [`CycleTime`](https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-querythreadcycletime) is the cumulative number of CPU clock cycles used by the thread in UM/KM, you can't really see the "live" delta via WinDbg.
+`User time` & `Kernel time` (see above to understand how they're getting calculated) are cumulative clock intervals counted to a thread in UM/KM (they don't include time spent waiting). [`CycleTime`](https://learn.microsoft.com/en-us/windows/win32/api/realtimeapiset/nf-realtimeapiset-querythreadcycletime) is the cumulative number of CPU clock cycles used by the thread in UM/KM, you can't really see the "live" delta via WinDbg (unless substracting cycles from two different times).
 
 | System Informer | Meaning |
 | --- | --- |
@@ -164,7 +164,7 @@ PROCESS ffffd888702d3080
         THREAD ffffd888653f5080  Cid 2064.0bb8  Teb: 0000000000ec9000 Win32Thread: 0000000000000000 WAIT
 ```
 
-`!process <EPROCESS> 4` shows one line per thread, use `!process <EPROCESS> 2` whenever you also want to see waits and dispatcher objects. Via [`!thread <ETHREAD> 6`](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-thread) we can see `UserTime` & `KernelTime`. I'll use ETHREAD `ffffd88863435080` because it is running in this snapshot. Waiting threads can still have accumulated CPU time, but aren't executing at that instant.
+`!process <EPROCESS> 4` shows one line per thread, use `!process <EPROCESS> 2` whenever you also want to see waits and dispatcher objects. Via [`!thread <ETHREAD> 6`](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/-thread) we can see `UserTime` & `KernelTime`. I'll use ETHREAD `ffffd88863435080` here, as that's thread address of the thread thats active in CPUSTRES.
 
 ```c
 lkd> !thread ffffd88863435080 6
