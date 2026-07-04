@@ -257,7 +257,9 @@ lkd> dt nt!_KTHREAD ffffd88863435080 State
 
 ### _KWAIT_REASON
 
-The wait reason is useful whenever a thread is waiting (comments were taken from [ntdoc](https://ntdoc.m417z.com/kwait_reason) for comments on each reason):
+The wait reason is useful whenever a thread is waiting (comments were taken from [ntdoc](https://ntdoc.m417z.com/kwait_reason) for comments on each reason). It's possible to see CS/wait reasons via e.g. MXA:
+
+![](https://github.com/nohuto/win-config/blob/main/system/images/WrQuantumEnd.png?raw=true)
 
 ```c
 lkd> dt nt!_KWAIT_REASON
