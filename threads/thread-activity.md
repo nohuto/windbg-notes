@@ -315,7 +315,7 @@ lkd> dt nt!_KTHREAD ffffd88863435080 WaitReason
 
 #### WrPreempted
 
-A lower priority thread here gets preempted caused by for example a higher priority thread becomes ready to run (wait completes, priority increased). Note that threads running in UM can preempt threads running in KM. Example of a thread with priority 16 getting preepmted from a thread with priority 18 which got ready, causing the lower priority thread to get sorted into the top of the ready queue here, and when the higher priority threads finished running, the lower priority thread can finish its quantum.
+A lower priority thread here gets preempted caused by, for example a higher priority thread becoming ready to run (wait completes, priority increased). Note that threads running in UM can preempt threads running in KM. Example of a thread with priority 16 getting preepmted from a thread with priority 18 which got ready, causing the lower priority thread to get sorted into the top of the ready queue here. When the higher priority threads finished running, the lower priority thread can finish its quantum.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/assets/WrPreempted.png?raw=true)
 
