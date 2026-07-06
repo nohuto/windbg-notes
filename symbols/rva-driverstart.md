@@ -53,8 +53,7 @@ lkd> dt nt!_DRIVER_OBJECT ffffac819f21fe30 DriverStart
 ### _DRIVER_OBJECT Structure
 
 ```c
-lkd> dt _DRIVER_OBJECT
-ntdll!_DRIVER_OBJECT
+lkd> dt nt!_DRIVER_OBJECT
    +0x000 Type             : Int2B
    +0x002 Size             : Int2B
    +0x008 DeviceObject     : Ptr64 _DEVICE_OBJECT
