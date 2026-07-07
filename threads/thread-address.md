@@ -107,7 +107,7 @@ TYPE mismatch for thread object at ffffac819f177080
 Some useful `!process` flags:
 
 | Flag | Information |
-| ---: | --- |
+| --- | --- |
 | `0` | Minimal process information |
 | `1` | Time and priority statistics |
 | `2` | Threads, waits, and associated events |

@@ -1,5 +1,13 @@
 # Processor Control Block
 
+Each processor has a kernel processor control region (`_KPCR`), which includes processor specific data (see structure below), and an embedded kernel processor control block (`_KPRCB`). The PRCB structure is private to the kernel and stores scheduling, DPC, accounting and other states for one processor.
+
+```c
+lkd> dt nt!_KPCR CurrentPrcb Prcb
+   +0x020 CurrentPrcb : Ptr64 _KPRCB // points to Prcb
+   +0x180 Prcb        : _KPRCB
+```
+
 ## !prcb
 
 ```c
@@ -13,18 +21,60 @@ Times -- Dpc    00000003 Interrupt 00000014
          Kernel 000113c5 User      000003c4 
 ```
 
-You can use the `fffff80065eb2180` address to dump specific fields from the `_KPRCB` structure, since thats the address of the structure. If you want to do the same for a different processor, use `!prcb <number>`. For space reasons I'll only dump a few fields, see the structure below for fields you can dump.
+The address after `at` is the processors `_KPRCB` address, `!prcb` defaults to processor 0. Instead of copying the address of the current processors PRCB, you can use `@$prcb` which is equal to the address:
+
+```c
+lkd> r @$prcb
+$prcb=fffff804463cd180
+lkd> !prcb 0
+PRCB for Processor 0 at fffff804463cd180:
+```
+
+For a different processor, use the `_KPRCB` address returned by `!prcb <proc number>`. For space reasons, only a few fields are shown here, see the complete structure below for other fields.
 
 ```c
 lkd> dt nt!_KPRCB fffff80065eb2180 ClockOwner ThreadDpcEnable MHz
    +0x021 ClockOwner      : 0x1 ''
-   +0x044 MHz             : 0xe74 // 3700
+   +0x044 MHz             : 0xe74 // 3700 (during boot, not current)
    +0x33b8 ThreadDpcEnable : 0x1 ''
 
 lkd> dt nt!_KPRCB ffffa68161edc180 ClockOwner ThreadDpcEnable MHz // PRCB address of processor 1
    +0x021 ClockOwner      : 0 '' // serialized timer expiration
    +0x044 MHz             : 0xe74
    +0x33b8 ThreadDpcEnable : 0x1 ''
+```
+
+## _KPCR Structure
+
+```c
+lkd> dt nt!_KPCR
+   +0x000 NtTib            : _NT_TIB
+   +0x000 GdtBase          : Ptr64 _KGDTENTRY64 // global descriptor table
+   +0x008 TssBase          : Ptr64 _KTSS64 // task state segment
+   +0x010 UserRsp          : Uint8B
+   +0x018 Self             : Ptr64 _KPCR
+   +0x020 CurrentPrcb      : Ptr64 _KPRCB // points to Prcb
+   +0x028 LockArray        : Ptr64 _KSPIN_LOCK_QUEUE
+   +0x030 Used_Self        : Ptr64 Void
+   +0x038 IdtBase          : Ptr64 _KIDTENTRY64 // interrupt dispatch table
+   +0x040 Unused           : [2] Uint8B
+   +0x050 Irql             : UChar
+   +0x051 SecondLevelCacheAssociativity : UChar
+   +0x052 ObsoleteNumber   : UChar
+   +0x053 Fill0            : UChar
+   +0x054 Unused0          : [3] Uint4B
+   +0x060 MajorVersion     : Uint2B
+   +0x062 MinorVersion     : Uint2B
+   +0x064 StallScaleFactor : Uint4B
+   +0x068 Unused1          : [3] Ptr64 Void
+   +0x080 KernelReserved   : [15] Uint4B
+   +0x0bc SecondLevelCacheSize : Uint4B
+   +0x0c0 HalReserved      : [16] Uint4B
+   +0x100 Unused2          : Uint4B
+   +0x108 KdVersionBlock   : Ptr64 Void
+   +0x110 Unused3          : Ptr64 Void
+   +0x118 PcrAlign1        : [24] Uint4B
+   +0x180 Prcb             : _KPRCB
 ```
 
 ## _KPRCB Structure
