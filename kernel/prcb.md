@@ -44,6 +44,8 @@ lkd> dt nt!_KPRCB ffffa68161edc180 ClockOwner ThreadDpcEnable MHz // PRCB addres
    +0x33b8 ThreadDpcEnable : 0x1 ''
 ```
 
+See '[Timer Expiration](https://noverse.dev/docs/win-config/system/timer-expiration/)' for more details on the `LastTimerExpiration`/`LastTimerHand`/`ClockOwner`/`ClockTimerState` fields, and practical examples.
+
 ## _KPCR Structure
 
 ```c
