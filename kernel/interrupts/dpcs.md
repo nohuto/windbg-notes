@@ -1,4 +1,4 @@
-# Deferred Procedure Calls
+# DPCs
 
 An ordinary DPC runs at `DISPATCH_LEVEL` IRQL, and can interrupt every thread regardless of its priority.
 
