@@ -33,7 +33,9 @@ At `DISPATCH_LEVEL` and above:
 - Pageable memory cannot be accessed
 - A page fault cannot be handled
 
-This is also a reason why a DPC is used afterwards to keep the IRQL elevated for a short time.
+This is also a reason why a DPC is used afterwards to keep the IRQL elevated for a short time (see [interrupt processing](https://noverse.dev/docs/windbg-notes/kernel/interrupts/interrupts/#interrupt-processing) for the full image).
+
+![](https://github.com/nohuto/windbg-notes/blob/main/assets/driver-isr.png?raw=true)
 
 ## _KPCR Irql
 

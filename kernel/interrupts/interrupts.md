@@ -16,7 +16,7 @@ Means the device interrupt goes through the IOAPIC & LAPIC (of selected processo
 
 There's one LAPIC per processor and one or more IOAPICs (for line based device interrupts), the LAPIC receives interrupts from the IOAPIC, while the IOAPIC receives interrupts from the device (and redirects them to the LAPIC) as shown above.
 
-Use `!apic` displays the LAPIC state for the current processor:
+Use `!apic` to display the LAPIC state for the current processor:
 
 ```c
 lkd> !apic
