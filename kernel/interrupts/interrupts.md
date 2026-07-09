@@ -139,9 +139,9 @@ lkd> dt nt!_KINTERRUPT ffff970022900500 Vector Irql SynchronizeIrql ServiceRouti
    +0x05d SynchronizeIrql : 0x7 ''
 ```
 
-## Interrupt Service Routine
+## ISR
 
-The ISR is the drivers routine for handling a hardware interrupt, which runs in interrupt context at the DIRQL (device IRQL, see [IRQLs](https://noverse.dev/docs/windbg-notes/kernel/interrupts/irqls)). The ISR should only dismiss the interrupt, save volatile state and queue any remaining work as a [DPC](https://noverse.dev/docs/windbg-notes/kernel/interrupts/dpcs). The `ServiceRoutine` field in the `_KINTERRUPT` structure is the ISR address (`MessageServiceRoutine` address for MSI).
+The ISR (interrupt service routine) is the drivers routine for handling a hardware interrupt, which runs in interrupt context at the DIRQL (device IRQL, see [IRQLs](https://noverse.dev/docs/windbg-notes/kernel/interrupts/irqls)). The ISR should only dismiss the interrupt, save volatile state and queue any remaining work as a [DPC](https://noverse.dev/docs/windbg-notes/kernel/interrupts/dpcs). The `ServiceRoutine` field in the `_KINTERRUPT` structure is the ISR address (`MessageServiceRoutine` address for MSI).
 
 ## _KINTERRUPT Structure
 
