@@ -4,7 +4,7 @@ An interrupt is an asynchronous event (can occur at any time) that causes a proc
 
 ### Interrupt Processing
 
-Context for the sections below, see `Windows Internals: Trap Dispatching` for details.
+Context for the sections below, see 'Windows Internals: [Trap Dispatching](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P2.pdf)' for details.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/assets/interrupt-control-flow.png?raw=true)
 
