@@ -1,5 +1,7 @@
 # Deferred Procedure Calls
 
+An ordinary DPC runs at `DISPATCH_LEVEL` IRQL, and can interrupt every thread regardless of its priority.
+
 ## _KDPC Structure
 
 ```c
@@ -17,16 +19,16 @@ lkd> dt nt!_KDPC
    +0x038 DpcData          : Ptr64 Void
 ```
 
-## Per Processor Queue
+## _KDPC_DATA Structure
 
-Each `_KPRCB` includes `DpcData[2]`, and its `_KDPC_DATA` entries show the processors ordinary & threaded DPC queues (see [DpcCount](https://noverse.dev/docs/win-config/system/kernel-values/#dpccount)):
+Each `_KPRCB` includes `DpcData[2]`, and its `_KDPC_DATA` fields show the processors ordinary & threaded DPC queues (see [DpcCount](https://noverse.dev/docs/win-config/system/kernel-values/#dpccount)):
 
 ```c
 lkd> dt nt!_KDPC_DATA
    +0x000 DpcList          : _KDPC_LIST
    +0x010 DpcLock          : Uint8B
    +0x018 DpcQueueDepth    : Int4B // waiting in queue
-   +0x01c DpcCount         : Uint4B
+   +0x01c DpcCount         : Uint4B // ordinary/threaded
    +0x020 ActiveDpc        : Ptr64 _KDPC // currently executing
    +0x028 LongDpcPresent   : Uint4B
    +0x02c Padding          : Uint4B
