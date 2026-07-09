@@ -1,4 +1,4 @@
-# Processor Control Block
+# KPRCB
 
 Each processor has a kernel processor control region (`_KPCR`), which includes processor specific data (see structure below), and an embedded kernel processor control block (`_KPRCB`). The PRCB structure is private to the kernel and stores scheduling, DPC, accounting and other states for one processor.
 
