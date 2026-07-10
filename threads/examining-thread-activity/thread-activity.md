@@ -1,4 +1,4 @@
-# Examining Thread Activity
+# Thread Activity
 
 Thread activity = what a thread is currently doing and how much execution time (UM/KM) it has used. Rather use cycles (delta) than UM/KM time, that time gets calculated via `KeMaximumIncrement`, e.g.:
 
