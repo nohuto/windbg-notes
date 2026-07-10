@@ -1,4 +1,4 @@
-# Thread Structures
+# Data Structures
 
 `_ETHREAD` (E = executive) is the executive thread object and extends the embedded `_KTHREAD` (K = kernel) with executive thread management state,`_KTHREAD` is the kernel thread control block used by the dispatcher and scheduler.
 

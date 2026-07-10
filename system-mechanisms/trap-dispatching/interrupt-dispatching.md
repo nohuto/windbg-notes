@@ -1,4 +1,4 @@
-# Interrupts
+# Interrupt Dispatching
 
 An interrupt is an asynchronous event (can occur at any time) that causes a processor to stop its current execution so an event can be handled. Hardware interrupts can come from devices (printers, keyboards, network cards etc.)/timers/other processors.
 
@@ -141,7 +141,7 @@ lkd> dt nt!_KINTERRUPT ffff970022900500 Vector Irql SynchronizeIrql ServiceRouti
 
 ## ISR
 
-The ISR (interrupt service routine) is the drivers routine for handling a hardware interrupt, which runs in interrupt context at the DIRQL (device IRQL, see [IRQLs](https://noverse.dev/docs/windbg-notes/kernel/interrupts/irqls)). The ISR should only dismiss the interrupt, save volatile state and queue any remaining work as a [DPC](https://noverse.dev/docs/windbg-notes/kernel/interrupts/dpcs). The `ServiceRoutine` field in the `_KINTERRUPT` structure is the ISR address (`MessageServiceRoutine` address for MSI).
+The ISR (interrupt service routine) is the drivers routine for handling a hardware interrupt, which runs in interrupt context at the DIRQL (device IRQL, see [IRQLs](https://noverse.dev/docs/windbg-notes/system-mechanisms/trap-dispatching/interrupt-request-levels/)). The ISR should only dismiss the interrupt, save volatile state and queue any remaining work as a [DPC](https://noverse.dev/docs/windbg-notes/system-mechanisms/software-interrupts/deferred-procedure-calls/). The `ServiceRoutine` field in the `_KINTERRUPT` structure is the ISR address (`MessageServiceRoutine` address for MSI).
 
 ## _KINTERRUPT Structure
 

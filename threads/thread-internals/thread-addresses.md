@@ -1,4 +1,4 @@
-# Thread Address
+# Thread Addresses
 
 Windows represents a thread with an executive `_ETHREAD` object, with a `_KTHREAD` structure as it's first member (named `Tcb`):
 
