@@ -4,7 +4,7 @@
 
 The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait (the descriptions were taken from [Windows Internals](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)).
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/thread-states.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/thread-states.png?raw=true)
 
 ```c
 lkd> dt nt!_KTHREAD_STATE
@@ -98,10 +98,10 @@ lkd> dt nt!_KTHREAD ffffd88863435080 WaitReason
 
 A lower priority thread here gets preempted caused by, for example a higher priority thread becoming ready to run (wait completes, priority increased). Note that threads running in UM can preempt threads running in KM. Example of a thread with priority 16 getting preepmted from a thread with priority 18 which got ready, causing the lower priority thread to get sorted into the top of the ready queue here. When the higher priority threads finished running, the lower priority thread can finish its quantum.
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/WrPreempted.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/WrPreempted.png?raw=true)
 
 #### WrQuantumEnd
 
 Happens whenever a threads exhausts its quantum, see '[Priority Seperation, Quantum](https://noverse.dev/docs/win-config/system/priority-separation/#quantum)' for details on modifying the quantum of FG/BG threads. If a thread uses its entire quantum, it depends on whenever there's another thread with the same priority (which would select that thread to run) for example, if not the thread gets another quantum.
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/WrQuantumEnd.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/WrQuantumEnd.png?raw=true)

@@ -4,7 +4,7 @@ Interrupt request levels (IRQLs) are basically an interrupt source priority and 
 
 Note that `PASSIVE_LEVEL`/`LOW_LEVEL` = IRQL `0`, where usually normal thread execution happens, means its not really a interrupt level.
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/irql-levels.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/irql-levels.png?raw=true)
 
 ```c
 // wdm.h
@@ -35,7 +35,7 @@ At `DISPATCH_LEVEL` and above:
 
 This is also a reason why a DPC is used afterwards to keep the IRQL elevated for a short time (see [interrupt processing](https://noverse.dev/docs/windbg-notes/system-mechanisms/trap-dispatching/interrupt-dispatching/#interrupt-processing) for the full image).
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/driver-isr.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/driver-isr.png?raw=true)
 
 ## _KPCR Irql
 

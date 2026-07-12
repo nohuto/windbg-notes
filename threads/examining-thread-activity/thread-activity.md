@@ -24,7 +24,7 @@ lkd> dt nt!_KTHREAD ffffd8886cbd2080 KernelTime
 
 There's no actual need to see the activity via WinDbg, use [System Informer](https://github.com/winsiderss/systeminformer/releases), open the properties of a process, go into the *Threads* section, choose columns *Kernel time*, *User time*, *State* (this can show [`_KTHREAD_STATE`](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/thread-states/#_kthread_state)/[`_KWAIT_REASON`](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/thread-states/#_kwait_reason) depending on whenever the thread is waiting). Note that processes don't run, they just provide resources and a context in which their threads would run.
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/si-activity.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/si-activity.png?raw=true)
 
 ## CPU Time & Cycles
 
@@ -40,12 +40,12 @@ There's no actual need to see the activity via WinDbg, use [System Informer](htt
 
 A waiting thread can have a large `Cycles` value with a current delta of `0`:
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/cycles-compare.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/cycles-compare.png?raw=true)
 
 Therefore use `Cycles` for the amount since thread creation & `Cycles delta` for amount since the latest refresh.
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/active-cycles.png?raw=true)
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/inactive-cycles.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/active-cycles.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/inactive-cycles.png?raw=true)
 
 ```c
 lkd> !process 0 4 CPUSTRES.exe
@@ -90,7 +90,7 @@ lkd> dt nt!_KTHREAD ffffd8886cbd2080 CycleTime
 
 The *System Idle Process* (`PID 0`) is a fake process used to account for idle CPU cycle. It has one idle thread per logical processor, each processors `_KPRCB` (shown by `!pcr`) points to its idle thread, which runs only when that processor has no other thread to execute.
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/idle-process-cycles.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/idle-process-cycles.png?raw=true)
 
 ```c
 lkd> !pcr 8
@@ -119,7 +119,7 @@ lkd> dt nt!_EPROCESS fffff8000b349f40 UniqueProcessId ImageFileName ActiveThread
 
 Attach WinDbg to the process, then list its threads using `~`:
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/attach-process.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/attach-process.png?raw=true)
 
 ```c
 0:006> ~

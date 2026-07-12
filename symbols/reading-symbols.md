@@ -28,7 +28,7 @@ My old [`disp-sym.ps1`](https://github.com/nohuto/windbg-notes/blob/main/assets/
 | `1` | Length size, default is `1`, it might not work properly with a length of `8 <` |
 | `dd` | Type of how the data should be displayed |
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/disp-sym.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/disp-sym.png?raw=true)
 
 ### Data Sizes
 

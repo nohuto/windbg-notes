@@ -6,13 +6,13 @@ An interrupt is an asynchronous event (can occur at any time) that causes a proc
 
 Context for the sections below, see 'Windows Internals: [Trap Dispatching](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P2.pdf)' for details.
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/interrupt-control-flow.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/interrupt-control-flow.png?raw=true)
 
 Means the device interrupt goes through the IOAPIC & LAPIC (of selected processor), the processor uses the interrupt vector (in IOAPIC fields) to index the IDT, which reaches the kernel interrupt dispatcher and the interrupt object (`_KINTERRUPT`). Then the dispatcher raises IRQL, synchronizes with the ISR, and the driver ISR handles the device work (often by requesting a DPC).
 
 ## APIC
 
-![](https://github.com/nohuto/windbg-notes/blob/main/assets/ioapic.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/ioapic.png?raw=true)
 
 There's one LAPIC per processor and one or more IOAPICs (for line based device interrupts), the LAPIC receives interrupts from the IOAPIC, while the IOAPIC receives interrupts from the device (and redirects them to the LAPIC) as shown above.
 
