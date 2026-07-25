@@ -5,8 +5,6 @@
 - *Executive* = upper layer of ntoskrnl including components like CM, process/power/I/O/PnP/memory/cache manager etc.
 - *Kernel* = lower layer of ntoskrnl used for e.g. thread scheduling, synchronization services (used by executive components)
 
-See Windows Interals [Chapter 2, System architecture](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf) for more details on them.
-
 Whenever you only want to see specific fields, you can add them behind the address, e.g.:
 
 ```c

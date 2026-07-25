@@ -2,7 +2,7 @@
 
 ### _KTHREAD_STATE
 
-The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait (the descriptions were taken from [Windows Internals](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)).
+The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait (the descriptions were partly taken from [Windows Internals](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)).
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/thread-states.png?raw=true)
 
