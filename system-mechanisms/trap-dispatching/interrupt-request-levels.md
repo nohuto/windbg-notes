@@ -2,7 +2,7 @@
 
 Interrupt request levels (IRQLs) are basically an interrupt source priority and a per processor priority state. Each interrupt source has such an IRQL, and each processor also has a current IRQL, which defines what source can interrupt that processor. I won't add `!irql` (displays `DebuggerSavedIRQL` of KPRCB) as the output within a debugger of it is meaningless.
 
-Note that `PASSIVE_LEVEL`/`LOW_LEVEL` = IRQL `0`, where usually normal thread execution happens, means its not really a interrupt level.
+Note that `PASSIVE_LEVEL`/`LOW_LEVEL` = IRQL `0`, where usually normal thread execution happens, means its not really a interrupt level, thread priorities only have a meaning if IRQL is less than 2.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/irql-levels.png?raw=true)
 

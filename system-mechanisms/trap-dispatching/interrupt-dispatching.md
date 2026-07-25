@@ -47,7 +47,7 @@ Here the `Vec` (vector) field shows `0x70`, when looking at the IDT below we'll 
 
 ## IDT
 
-The IDT (interrupt descriptor table) assingns interrupt vectors to handlers.
+The IDT (interrupt descriptor table) assingns interrupt vectors to handlers, see [WKE-IDT.txt](https://github.com/nohuto/windbg-notes/blob/main/assets/WKE-IDT.txt) for a dump using [WKE](https://github.com/AxtMueller/Windows-Kernel-Explorer).
 
 ```c
 lkd> !idt
