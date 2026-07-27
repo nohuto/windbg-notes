@@ -46,24 +46,24 @@ lkd> dt nt!_KWAIT_REASON
    FreePage = 0n1 // Waiting for a free page
    PageIn = 0n2 // Waiting for a page to be read in
    PoolAllocation = 0n3 // Waiting for a pool allocation
-   DelayExecution = 0n4 // Waiting due to a delay execution
-   Suspended = 0n5 // Waiting because the thread is suspended
-   UserRequest = 0n6 // Waiting due to a user request
+   DelayExecution = 0n4 // Waiting due to a delay execution - NtDelayExecution
+   Suspended = 0n5 // Waiting because the thread is suspended - NtSuspendThread
+   UserRequest = 0n6 // Waiting due to a user request - NtWaitForSingleObject
    WrExecutive = 0n7 // Waiting for an executive event
    WrFreePage = 0n8 // Waiting for a free page
    WrPageIn = 0n9 // Waiting for a page to be read in
-   WrPoolAllocation = 0n10 // Waiting for a pool allocation
+   WrPoolAllocation = 0n10 // Waiting for a pool allocation - 10
    WrDelayExecution = 0n11 // Waiting due to a delay execution
    WrSuspended = 0n12 // Waiting because the thread is suspended
    WrUserRequest = 0n13 // Waiting due to a user request
    WrSpare0 = 0n14
-   WrQueue = 0n15 // Waiting for a queue
-   WrLpcReceive = 0n16 // Waiting for an LPC receive
-   WrLpcReply = 0n17 // Waiting for an LPC reply
+   WrQueue = 0n15 // Waiting for a queue - NtRemoveIoCompletion
+   WrLpcReceive = 0n16 // Waiting for an LPC receive - NtReplyWaitReceivePort
+   WrLpcReply = 0n17 // Waiting for an LPC reply - NtRequestWaitReplyPort
    WrVirtualMemory = 0n18 // Waiting for virtual memory
-   WrPageOut = 0n19 // Waiting for a page to be written out
-   WrRendezvous = 0n20 // Waiting for a rendezvous
-   WrKeyedEvent = 0n21 // Waiting for a keyed event
+   WrPageOut = 0n19 // Waiting for a page to be written out - NtFlushVirtualMemory
+   WrRendezvous = 0n20 // Waiting for a rendezvous - 20
+   WrKeyedEvent = 0n21 // Waiting for a keyed event - NtCreateKeyedEvent
    WrTerminated = 0n22 // Waiting for thread termination
    WrProcessInSwap = 0n23 // Waiting for a process to be swapped in
    WrCpuRateControl = 0n24 // Waiting for CPU rate control
@@ -72,7 +72,7 @@ lkd> dt nt!_KWAIT_REASON
    WrResource = 0n27 // Waiting for a resource
    WrPushLock = 0n28 // Waiting for a push lock
    WrMutex = 0n29 // Waiting for a mutex
-   WrQuantumEnd = 0n30 // Waiting for the end of a quantum
+   WrQuantumEnd = 0n30 // Waiting for the end of a quantum - 30
    WrDispatchInt = 0n31 // Waiting for a dispatch interrupt
    WrPreempted = 0n32 // Waiting because the thread was preempted
    WrYieldExecution = 0n33 // Waiting to yield execution
@@ -82,7 +82,7 @@ lkd> dt nt!_KWAIT_REASON
    WrAlertByThreadId = 0n37 // Waiting for an alert by thread ID
    WrDeferredPreempt = 0n38 // Waiting for a deferred preemption
    WrPhysicalFault = 0n39 // Waiting for a physical fault
-   WrIoRing = 0n40 // Waiting for an I/O ring
+   WrIoRing = 0n40 // Waiting for an I/O ring - 40
    WrMdlCache = 0n41 // Waiting for an MDL cache
    MaximumWaitReason = 0n42
 ```
@@ -96,12 +96,54 @@ lkd> dt nt!_KTHREAD ffffd88863435080 WaitReason
 
 #### WrPreempted
 
-A lower priority thread here gets preempted caused by, for example a higher priority thread becoming ready to run (wait completes, priority increased). Note that threads running in UM can preempt threads running in KM. Example of a thread with priority 16 getting preepmted from a thread with priority 18 which got ready, causing the lower priority thread to get sorted into the top of the ready queue here. When the higher priority threads finished running, the lower priority thread can finish its quantum.
+A lower priority thread here gets preempted caused by, for example a higher priority thread becoming ready to run (wait completes, priority increased). Note that threads running in UM can preempt threads running in KM. Example of a thread with priority 16 getting preepmted from a thread with priority 18 which got ready, causing the lower priority thread to get sorted into the top of the r eady queue here. When the higher priority threads finished running, the lower priority thread can finish its quantum.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/WrPreempted.png?raw=true)
 
 #### WrQuantumEnd
 
-Happens whenever a threads exhausts its quantum, see '[Priority Seperation, Quantum](https://noverse.dev/docs/win-config/system/priority-separation/#quantum)' for details on modifying the quantum of FG/BG threads. If a thread uses its entire quantum, it depends on whenever there's another thread with the same priority (which would select that thread to run) for example, if not the thread gets another quantum.
+Happens whenever a threads exhausts its quantum (`CycleTime >= QuantumTarget`), see '[Priority Seperation, Quantum](https://noverse.dev/docs/win-config/system/priority-separation/#quantum)' for details on modifying the quantum of FG/BG threads. If a thread uses its entire quantum, it depends on whenever there's another thread with the same priority (which would select that thread to run) for example, if not the thread gets another quantum.
+
+`WrQuantumEnd` (`30`) is used as the context switch reason when [`KiQuantumEnd`](https://github.com/nohuto/decompiled-pseudocode/tree/main/11-23H2/ntoskrnl/KiQuantumEnd.c) switches the running thread for another thread (old thread is placed back into a ready queue). [`KiUpdateRunTime`](https://github.com/nohuto/decompiled-pseudocode/tree/main/11-23H2/ntoskrnl/KiUpdateRunTime.c) requests `KiQuantumEnd` when the running threads cycle based `QuantumTarget` is reached:
+
+```c
+// KiUpdateRunTime
+
+result = CurrentThread->CycleTime;
+if ( result >= CurrentThread->QuantumTarget )
+  goto LABEL_23;
+```
+
+```c
+// KiUpdateRunTime
+
+LABEL_23:
+CurrentPrcb->QuantumEnd = 1;
+if ( !CurrentPrcb->NestingLevel )
+  return HalRequestSoftwareInterrupt(2);
+```
+
+For an expired quantum, `KiQuantumEnd` adds the next `QuantumTarget`, then sets `WaitReason` to `30` before returning the old thread to a ready queue and switching context:
+
+```c
+// KiQuantumEnd
+
+*(_QWORD *)(CurrentThread + 32) = v2 + KiCyclesPerClockQuantum * v3; // QuantumTarget = CycleTime + next quantum cycles
+```
+
+```c
+// KiQuantumEnd
+
+*(_BYTE *)(v72 + 643) = 30; // _KTHREAD.WaitReason = WrQuantumEnd
+KiQueueReadyThread((__int64)CurrentPrcb, (__int64 *)&v120, v72);
+KiAbProcessContextSwitch(v72, 1LL);
+IsUserVaAccessAllowed = KeIsUserVaAccessAllowed(0LL);
+if ( KeSmapEnabled )
+  __asm { stac }
+LOBYTE(v103) = 1;
+result = KiSwapContext(v72, NextThread, v103);
+```
+
+Note that `KiUpdateRunTime` also seems to request the same function for preferred heterogeneous processor changes (`KiCheckPreferredHeteroProcessor`), means `WrQuantumEnd` doesn't always (but usually) mean `CycleTime >= QuantumTarget`.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/WrQuantumEnd.png?raw=true)
