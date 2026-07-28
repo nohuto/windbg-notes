@@ -6,11 +6,11 @@
 
 Here we can see the state transitions of a single thread when having different activity levels (Low = 25%, Busy = 75%, Maximum = 100%):
 
-![](https://github.com/nohuto/win-config/blob/main/system/images/perfmon-activity.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/perfmon-activity.png?raw=true)
 
 Here I've set the affinity of both threads to the same CPU, causing them to switch between running/ready (as only one can run at a time) all the time (thats also how it would look like when you've a single processor system):
 
-![](https://github.com/nohuto/win-config/blob/main/system/images/perfmon-2-threads.png?raw=true)
+![](https://github.com/nohuto/windbg-notes/blob/main/images/perfmon-2-threads.png?raw=true)
 
 ### _KTHREAD_STATE
 
