@@ -1,5 +1,17 @@
 # Thread States
 
+> "*Thread State is the current state of the thread.  It is 0 for Initialized, 1 for Ready, 2 for Running, 3 for Standby, 4 for Terminated, 5 for Wait, 6 for Transition, 7 for Unknown.  A Running thread is using a processor, a Standby thread is about to use one.  A Ready thread wants to use a processor, but is waiting for a processor because none are free.  A thread in Transition is waiting for a resource in order to execute, such as waiting for its execution stack to be paged in from disk.  A Waiting thread has no use for the processor because it is waiting for a peripheral operation to complete or a resource to become free.*"
+
+## PerfMon Example
+
+Here we can see the state transitions of a single thread when having different activity levels (Low = 25%, Busy = 75%, Maximum = 100%):
+
+![](https://github.com/nohuto/win-config/blob/main/system/images/perfmon-activity.png?raw=true)
+
+Here I've set the affinity of both threads to the same CPU, causing them to switch between running/ready (as only one can run at a time) all the time (thats also how it would look like when you've a single processor system):
+
+![](https://github.com/nohuto/win-config/blob/main/system/images/perfmon-2-threads.png?raw=true)
+
 ### _KTHREAD_STATE
 
 The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait (the descriptions were partly taken from [Windows Internals](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)).
@@ -10,12 +22,12 @@ The state shows the threads scheduler state, the wait reason shows why a waiting
 lkd> dt nt!_KTHREAD_STATE
    Initialized = 0n0 // This state is used internally while a thread is being created
    Ready = 0n1 // Queued on Prcb->DispatcherReadyListHead. A thread in the ready state is waiting to execute or to be in-swapped after completing a wait. When looking for a thread to execute, the dispatcher considers only the threads in the ready state
-   Running = 0n2 // Pointed at by Prcb->CurrentThread. After the dispatcher performs a context switch to a thread, the thread enters the running state and executes. The thread’s execution continues until its quantum ends (and an other thread at the same priority is ready to run), it is preempted by a higher-priority thread, it terminates, it yields execution, or it voluntarily enters the waiting state
+   Running = 0n2 // After the dispatcher performs a context switch to a thread, the thread enters the running state and executes. The thread’s execution continues until its quantum ends (and an other thread at the same priority is ready to run), it is preempted by a higher-priority thread, it terminates, it yields execution, or it voluntarily enters the waiting state
    Standby = 0n3 // A thread in this state has been selected to run next on a particular processor. When the correct conditions exist, the dispatcher performs a context switch to this thread. Only one thread can be in the standby state for each processor on the system. Note that a thread can be preempted out of the standby state before it ever executes (if, for example, a higher-priority thread becomes runnable before the standby thread begins execution)
    Terminated = 0n4 // When a thread finishes executing, it enters this state. After the thread is terminated, the executive thread object (the data structure in system memory that describes the thread) might or might not be deallocated. The object manager sets the policy regarding when to delete the object. For example, the object remains if there are any open handles to the thread. A thread can also enter the terminated state from other states if it’s killed explicitly by some other thread, for example, by calling the TerminateThread Windows API
-   Waiting = 0n5 // Queued on WaitList->WaitBlock. A thread can enter the waiting state in several ways: A thread can voluntarily wait for an object to synchronize its execution, the OS can wait on the thread’s behalf (such as to resolve a paging I/O), or an environment subsystem can direct the thread to suspend itself. When the thread’s wait ends, depending on its priority, the thread either begins running immediately or is moved back to the ready state
-   Transition = 0n6 // Queued on KiStackInSwapList. A thread enters the transition state if it is ready for execution but its kernel stack is paged out of memory. After its kernel stack is brought back into memory, the thread enters the ready state
-   DeferredReady = 0n7 // Pointed at by Prcb->DeferredReadyListHead. This state is used for threads that have been selected to run on a specific processor but have not actually started running there. This state exists so that the kernel can minimize the amount of time the per-processor lock on the scheduling database is held
+   Waiting = 0n5 // A thread can enter the waiting state in several ways: A thread can voluntarily wait for an object to synchronize its execution, the OS can wait on the thread’s behalf (such as to resolve a paging I/O), or an environment subsystem can direct the thread to suspend itself. When the thread’s wait ends, depending on its priority, the thread either begins running immediately or is moved back to the ready state
+   Transition = 0n6 // A thread enters the transition state if it is ready for execution but its kernel stack is paged out of memory. After its kernel stack is brought back into memory, the thread enters the ready state
+   DeferredReady = 0n7 // This state is used for threads that have been selected to run on a specific processor but have not actually started running there. This state exists so that the kernel can minimize the amount of time the per-processor lock on the scheduling database is held
    GateWaitObsolete = 0n8
    WaitingForProcessInSwap = 0n9
 ```
