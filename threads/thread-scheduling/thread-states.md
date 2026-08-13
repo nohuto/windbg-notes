@@ -14,7 +14,7 @@ Here I've set the affinity of both threads to the same CPU, causing them to swit
 
 ### _KTHREAD_STATE
 
-The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait (the descriptions were partly taken from [Windows Internals](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)).
+The state shows the threads scheduler state, the wait reason shows why a waiting thread entered its wait (the descriptions were taken from [Windows Internals](https://github.com/nohuto/windows-books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)).
 
 > "*The ready and deferred ready states are represented as one. This reflects the fact that the deferred ready state acts as a temporary placeholder for the scheduling routines. This is true for the standby state as well. These states are almost always very short-lived. Threads in these states always transition quickly to ready, running, or waiting.*"
 >
