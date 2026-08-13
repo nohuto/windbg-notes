@@ -2,11 +2,11 @@
 
 > "*Windows schedules threads, not processes.*" 
 
-Every thread has a (numeric) scheduling priority from `0` (lowest) up to `31` (highest). When a processor must choose the next thread, it selects a ready thread at the highest available priority (ready threads at the same priority are usually scheduled in round robin order, means ). Also note that threads run at `PASSIVE_LEVEL`, while code running at `DISPATCH_LEVEL` (see [IRQLs](https://noverse.dev/docs/windbg-notes/system-mechanisms/trap-dispatching/interrupt-request-levels/)) or above prevents normal thread dispatch on that processor no matter what priority it has.
+Every thread has a (numeric) scheduling priority from `0` (lowest) up to `31` (highest). When a processor must choose the next thread, it selects a ready thread at the highest available priority (ready threads at the same priority are usually scheduled in round robin order, means that when a thread exhausts its quantum, its moved to the end of its priorities ready queue and the next thread gets a turn, as shown in [WrQuantumEnd](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/thread-states/#wrquantumend)). Also note that threads run at `PASSIVE_LEVEL`, while code running at `DISPATCH_LEVEL` (see [IRQLs](https://noverse.dev/docs/windbg-notes/system-mechanisms/trap-dispatching/interrupt-request-levels/)) or above prevents normal thread dispatch on that processor no matter what priority it has.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/thread-priority-levels.png?raw=true)
 
-- `0` = reserved for the memory managers zero page thread ([`MiZeroNodePages`](https://github.com/nohuto/decompiled-pseudocode/blob/main/11-23H2/ntoskrnl/MiZeroNodePages.c)), which runs when no other thread needs the processor (thread inside '*System*' process):
+- `0` = reserved for the memory managers zero page thread(s) ([`MiZeroNodePages`](https://github.com/nohuto/decompiled-pseudocode/blob/main/11-23H2/ntoskrnl/MiZeroNodePages.c)), which runs when no other thread needs the processor (thread inside '*System*' process):
 
 ```c
 lkd> dx -g @$cursession.Processes[4].Threads.Where(t => t.KernelObject.Tcb.Priority == 0)
@@ -52,7 +52,7 @@ Base ffffdf8f3fa08000 Limit ffffdf8f3fa01000 Call 0000000000000000
 Priority 0  BasePriority 0  IoPriority 2  PagePriority 5 // Priority/BasePriority 0
 ```
 
-- `1-15` = variable (dynamic) priorities, a thread has a base priority in this range, while its current priority can (temporarily) be boosted above that (via MMCSS for example)
+- `1-15` = variable (dynamic) priorities, a thread has a base priority in this range, while its current priority can (temporarily) be boosted above that
 - `16-31` = RT (real-time) priorities, they take priority over all threads with variable priority and are unaffected by the dynamic priority boosts
 
 Most application/service threads use the variable range, normally starting at priority `8`. The RT range is used by several kernel/system threads and by applications that  request it (using that range requires `SeIncreaseBasePriorityPrivilege`), note that a for example a RT thread can prevent important work at variable range from running, so it that should be only used for short work that actually requires priority.
@@ -132,7 +132,7 @@ Each thread has a relative priority within its process class, ordinary values ar
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/si-thread-prio.png?raw=true)
 
-- `Base priority` = `_KPROCESS.BasePriority` + relative priority
+- `Base priority` = `_KPROCESS.BasePriority` + relative priority (excluding `THREAD_PRIORITY_IDLE`/`THREAD_PRIORITY_TIME_CRITICAL`)
 - `Priority (symbolic)` = shows the relative thread setting (can be a name or number)
 - `Priority` = its current scheduling priority (whenever that is different to the base theres a boost happening via for example [`PsPrioritySeparation`](https://noverse.dev/docs/win-config/system/priority-separation/#pspriorityseparation-10)) as you can see below
 
