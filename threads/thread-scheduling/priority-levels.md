@@ -72,7 +72,7 @@ As written at the beginning, a process doesn't run and doesn't compete with othe
 | `HIGH_PRIORITY_CLASS` | `3` | `13` |
 | `REALTIME_PRIORITY_CLASS` | `4` | `24` |
 
-Note that `_EPROCESS.PriorityClass` & `_KPROCESS.BasePriority` are separate fields, CSRSS (and DWM, Session Manager, SCM, LSASS) for example doesn't get its base `13` from the `PriorityClass`, it directly sets its current `ProcessBasePriority` to `13`, without changing `PriorityClass`. In that case the `ProcessBasePriority` is used by the threads (while normally the class selects its base). This is done before `CsrServerInitialization`, in [`csrss!main`](https://github.com/nohuto/decompiled-pseudocode/blob/main/11-22H2/csrss/main.c):
+Note that `_EPROCESS.PriorityClass` & `_KPROCESS.BasePriority` are separate fields, CSRSS (and Session Manager, SCM, LSASS) for example doesn't get its base `13` from the `PriorityClass`, it directly sets its current `ProcessBasePriority` to `13`, without changing `PriorityClass`. In that case the `ProcessBasePriority` is used by the threads (while normally the class selects its base). This is done before `CsrServerInitialization`, in [`csrss!main`](https://github.com/nohuto/decompiled-pseudocode/blob/main/11-22H2/csrss/main.c):
 
 ```c
 // main
