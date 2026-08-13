@@ -144,16 +144,6 @@ Use `!process <PID> 4` to get the `_ETHREAD` addresses, in the example below I'v
 
 ```c
 lkd> !process 27f0 4
-PROCESS ffffcf86af8870c0
-    SessionId: 1  Cid: 27f0
-    Image: CPUStress.exe
-
-        THREAD ffffcf86de0eb540  Cid 27f0.07dc ... WAIT // worker
-        THREAD ffffcf86ddff1540  Cid 27f0.21b0 ... WAIT // worker
-        THREAD ffffcf86ddff4540  Cid 27f0.08f4 ... WAIT // worker
-        THREAD ffffcf86de0b3540  Cid 27f0.0b54 ... RUNNING on processor 10 // worker
-
-lkd> !process 27f0 4
 Searching for Process with Cid == 27f0
 PROCESS ffffcf86af8870c0
     SessionId: 1  Cid: 27f0    Peb: 1cf60e1000  ParentCid: 1078
