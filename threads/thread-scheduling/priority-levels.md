@@ -65,14 +65,23 @@ As written at the beginning, a process doesn't run and doesn't compete with othe
 
 | Process priority class | `_EPROCESS.PriorityClass` | Process base priority |
 | --- | ---: | ---: |
-| Idle | `1` | `4` |
-| Below Normal | `5` | `6` |
-| Normal | `2` | `8` |
-| Above Normal | `6` | `10` |
-| High | `3` | `13` |
-| Real-Time | `4` | `24` |
+| `IDLE_PRIORITY_CLASS` | `1` | `4` |
+| `BELOW_NORMAL_PRIORITY_CLASS` | `5` | `6` |
+| `NORMAL_PRIORITY_CLASS` | `2` | `8` |
+| `ABOVE_NORMAL_PRIORITY_CLASS` | `6` | `10` |
+| `HIGH_PRIORITY_CLASS` | `3` | `13` |
+| `REALTIME_PRIORITY_CLASS` | `4` | `24` |
 
-Note that `_EPROCESS.PriorityClass` & `_KPROCESS.BasePriority` are separate fields, CSRSS for example doesn't get its base `13` from the `PriorityClass`, it directly sets its current `ProcessBasePriority` to `13`, without changing `PriorityClass`. In that case the `ProcessBasePriority` is used by the threads (while normally the class selects its base).
+Note that `_EPROCESS.PriorityClass` & `_KPROCESS.BasePriority` are separate fields, CSRSS for example doesn't get its base `13` from the `PriorityClass`, it directly sets its current `ProcessBasePriority` to `13`, without changing `PriorityClass`. In that case the `ProcessBasePriority` is used by the threads (while normally the class selects its base). This is done before `CsrServerInitialization`, in [`csrss!main`](https://github.com/nohuto/decompiled-pseudocode/blob/main/11-22H2/csrss/main.c):
+
+```c
+// main
+
+RtlSetUnhandledExceptionFilter(CsrUnhandledExceptionFilter);
+v11 = 13;
+NtSetInformationProcess((HANDLE)0xFFFFFFFFFFFFFFFFLL, ProcessBasePriority, &v11, 4u);
+RtlSetHeapInformation(0LL, HeapEnableTerminationOnCorruption, 0LL, 0LL);
+```
 
 ```c
 lkd> dx @$cursession.Processes[0x2e0].KernelObject.Pcb.BasePriority // 736 (0x2e0) PID of CSRSS
@@ -81,6 +90,12 @@ lkd> dx @$cursession.Processes[0x2e0].KernelObject.Pcb.BasePriority // 736 (0x2e
 lkd> dx @$cursession.Processes[0x2e0].KernelObject.PriorityClass
 @$cursession.Processes[0x2e0].KernelObject.PriorityClass : 0x2 [Type: unsigned char] // Normal
 ```
+
+> "*Use HIGH_PRIORITY_CLASS with care. If a thread runs at the highest priority level for extended periods, other threads in the system will not get processor time. If several threads are set at high priority at the same time, the threads lose their effectiveness. The high-priority class should be reserved for threads that must respond to time-critical events. If your application performs one task that requires the high-priority class while the rest of its tasks are normal priority, use SetPriorityClass to raise the priority class of the application temporarily; then reduce it after the time-critical task has been completed. Another strategy is to create a high-priority process that has all of its threads blocked most of the time, awakening threads only when critical tasks are needed. The important point is that a high-priority thread should execute for a brief time, and only when it has time-critical work to perform.*
+>
+> *You should almost never use REALTIME_PRIORITY_CLASS, because this interrupts system threads that manage mouse input, keyboard input, and background disk flushing. This class can be appropriate for applications that "talk" directly to hardware or that perform brief tasks that should have limited interruptions.*
+>
+> — Microsoft, [Scheduling Priorities](https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities)
 
 [`PspComputeQuantumAndPriority`](https://github.com/nohuto/decompiled-pseudocode/tree/main/11-23H2/ntoskrnl/PspComputeQuantumAndPriority.c) indexes `PspPriorityTable` with the processs `PriorityClass`, [`PspSetProcessPriorityByClass`](https://github.com/nohuto/decompiled-pseudocode/tree/main/11-23H2/ntoskrnl/PspSetProcessPriorityByClass.c) passes that result to [`KeSetPriorityAndQuantumProcess`](https://github.com/nohuto/decompiled-pseudocode/tree/main/11-23H2/ntoskrnl/KeSetPriorityAndQuantumProcess.c), which applies the change to the process & its threads.
 
@@ -101,15 +116,19 @@ Each thread has a relative priority within its process class, ordinary values ar
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/api-thread-priorities.png?raw=true)
 
-| Relative thread priority | Real-Time (`24`) | High (`13`) | Above Normal (`10`) | Normal (`8`) | Below Normal (`6`) | Idle (`4`) |
+> "*A typical strategy is to use THREAD_PRIORITY_ABOVE_NORMAL or THREAD_PRIORITY_HIGHEST for the process's input thread, to ensure that the application is responsive to the user. Background threads, particularly those that are processor intensive, can be set to THREAD_PRIORITY_BELOW_NORMAL or THREAD_PRIORITY_LOWEST, to ensure that they can be preempted when necessary. However, if you have a thread waiting for another thread with a lower priority to complete some task, be sure to block the execution of the waiting high-priority thread.*"
+>
+> — Microsoft, [Scheduling Priorities](https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities)
+
+| Relative thread priority | `REALTIME_PRIORITY_CLASS` (`24`) | `HIGH_PRIORITY_CLASS` (`13`) | `ABOVE_NORMAL_PRIORITY_CLASS` (`10`) | `NORMAL_PRIORITY_CLASS` (`8`) | `BELOW_NORMAL_PRIORITY_CLASS` (`6`) | `IDLE_PRIORITY_CLASS` (`4`) |
 | --- | --- | --- | --- | --- | --- | --- |
-| Time Critical | `31` | `15` | `15` | `15` | `15` | `15` |
-| Highest (`+2`) | `26` | `15` | `12` | `10` | `8` | `6` |
-| Above Normal (`+1`) | `25` | `14` | `11` | `9` | `7` | `5` |
-| Normal (`0`) | `24` | `13` | `10` | `8` | `6` | `4` |
-| Below Normal (`-1`) | `23` | `12` | `9` | `7` | `5` | `3` |
-| Lowest (`-2`) | `22` | `11` | `8` | `6` | `4` | `2` |
-| Idle | `16` | `1` | `1` | `1` | `1` | `1` |
+| `THREAD_PRIORITY_TIME_CRITICAL` | `31` | `15` | `15` | `15` | `15` | `15` |
+| `THREAD_PRIORITY_HIGHEST` (`+2`) | `26` | `15` | `12` | `10` | `8` | `6` |
+| `THREAD_PRIORITY_ABOVE_NORMAL` (`+1`) | `25` | `14` | `11` | `9` | `7` | `5` |
+| `THREAD_PRIORITY_NORMAL` (`0`) | `24` | `13` | `10` | `8` | `6` | `4` |
+| `THREAD_PRIORITY_BELOW_NORMAL` (`-1`) | `23` | `12` | `9` | `7` | `5` | `3` |
+| `THREAD_PRIORITY_LOWEST` (`-2`) | `22` | `11` | `8` | `6` | `4` | `2` |
+| `THREAD_PRIORITY_IDLE` | `16` | `1` | `1` | `1` | `1` | `1` |
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/si-thread-prio.png?raw=true)
 
@@ -177,7 +196,7 @@ lkd> dt nt!_KTHREAD ffffcf86de0b3540 Priority BasePriority PriorityDecrement
    +0x233 BasePriority      : 1 '' // Idle (variable range)
    +0x234 PriorityDecrement : 0 ''
 
-// with PsPrioritySeparation = 2
+// with GUI in FG (while PsPrioritySeparation = 2)
 
 lkd> dt nt!_KTHREAD ffffcf86de0eb540 Priority BasePriority PriorityDecrement
    +0x0c3 Priority          : 10 ''
