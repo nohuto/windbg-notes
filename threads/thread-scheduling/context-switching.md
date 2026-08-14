@@ -50,38 +50,113 @@ lkd> dt nt!_KPRCB CurrentThread NextThread IdleThread KeContextSwitches ffffb901
    +0x2d3c KeContextSwitches : 0x726627
 ```
 
+## CS Functions
+
+`KiSwapContext` is the x64 wrapper, `SwapContext` does the low level context switch.
+
+### KiSwapContext
+
+[Old MS source](https://github.com/ayyucedemirbas/Windows-Research-Kernel-WRK-/blob/master/WRK-v1.2/base/ntos/ke/amd64/ctxswap.asm) (Windows Server 2003 Enterprise Edition SP1):
+
+```asm
+; BOOLEAN
+; KiSwapContext (
+;    IN PKTHREAD OldThread,
+;    IN PKTHREAD NewThread
+;    )
+;
+; Routine Description:
+;
+;   This function is a small wrapper that marshalls arguments and calls the
+;   actual swap context routine.
+;
+;   N.B. The old thread lock has been acquired and the dispatcher lock dropped
+;        before this routine is called.
+;
+;   N.B. The current thread address and the new thread state has been set
+;        before this routine is called.
+;
+; Arguments:
+;
+;   OldThread (rcx) - Supplies the address of the old thread.
+;
+;   NewThread (rdx) - Supplies the address of the new thread.
+;
+; Return Value:
+;
+;   If a kernel APC is pending, then a value of TRUE is returned. Otherwise,
+;   a value of FALSE is returned.
+;
+```
+
+25H2 pseudocode:
+
+```c
+__int64 __fastcall KiSwapContext(__int64 a1, __int64 a2, unsigned int a3)
+{
+  return SwapContext(a3);
+}
+```
+
+### SwapContext
+
+`SwapContext` saves the old state, changes stacks and restores the new state, IDA isn't able to decompile the functions as it changes `rsp`.
+
+I've tried to create an readable function based on 23H2 disassembly & WRK, this is currently the first attempt so it may not be accurate yet.
+
+- [SwapContext.c](https://github.com/nohuto/windbg-notes/blob/main/assets/SwapContext.c)
+
+![](https://github.com/nohuto/windbg-notes/blob/main/images/ida-error.png?raw=true)
+
 ## What Is Switched
 
-As mentioned above, a thread context is architecture specific, it includes the state required to continue execution.
+The switched state is split between the kernel stack, thread/process structures and processor-local state.
 
 > "*A typical context switch requires saving and reloading the following data:*  
 > *- Instruction pointer*  
 > *- Kernel stack pointer*  
-> *- A pointer to the address space in which the thread runs (the process’s page table directory)*
+> *- A pointer to the address space in which the thread runs (the process’s page table directory)*"
 >
 > — Windows Internals, [E7, P1: 'Context switching'](https://github.com/nohuto/Windows-Books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)
 
-Each thread has its own kernel stack, `_KTHREAD.KernelStack` stores the saved kernel stack position while the thread isn't running:
+The relevant parameter and variable definitions provide a compact overview of the state used by the reconstruction:
+
+This section isn't complete yet and may be extended somewhat soon, the param/var definitions below show a short overview for now:
 
 ```c
-lkd> dt nt!_KTHREAD KernelStack ContextSwitches Process State
-   +0x058 KernelStack     : Ptr64 Void
-   +0x154 ContextSwitches : Uint4B
-   +0x184 State           : UChar
-   +0x220 Process         : Ptr64 _KPROCESS
+unsigned __int8 __usercall SwapContext@<al>(
+        struct _KTHREAD *OldThread@<rdi>,
+        struct _KTHREAD *NewThread@<rsi>,
+        struct _KPRCB *CurrentPrcb@<rbx>,
+        unsigned __int8 OldApcBypass@<cl>)
+{
+  struct _KPCR *CurrentPcr; // processor local state
+  struct _ETHREAD *OldEthread;
+  struct _ETHREAD *NewEthread; // user FS/GS state
+  struct _EPROCESS *OldEprocess;
+  struct _EPROCESS *NewEprocess;
+  unsigned __int64 XStateMask;
+  unsigned __int64 RestoreMask; // extended processor state
+  struct _KPROCESS *OldAddressProcess;
+  struct _KPROCESS *NewAddressProcess;
+  unsigned __int64 DirectoryTableBase; // address space state
+  unsigned __int64 InitialStack;
+  unsigned __int64 OldShadowStackPointer; // kernel/CET stacks
+  unsigned __int64 GdtBase;
+  unsigned int FsDescriptorBase;
+  unsigned __int64 UserGsBase;
+}
 ```
 
-IDA wasn't able to decompile `SwapContext`, so I've to use the disassembly instead. These instructions save the old threads kernel stack pointer and load the new threads kernel stack pointer (`rdi` = old `_KTHREAD`, `rsi` = new `_KTHREAD`):
-
-![](https://github.com/nohuto/windbg-notes/blob/main/images/ida-error.png?raw=true)
+Each thread has its own kernel stack, `SwapContext` stores the old stack position and loads the new one:
 
 ```c
-// SwapContext
-
-/*
- * 0000000140427E24: mov     [rdi+58h], rsp
- * 0000000140427E28: mov     rsp, [rsi+58h]
- */
+/* SwapContext */
+__asm
+{
+  mov [OldThread->KernelStack], rsp
+  mov rsp, [NewThread->KernelStack]
+}
 ```
 
 One important note is that when both threads belong to the same process, their user address space is already the same, but when they're from different processes, the switch must also use the new processs address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, so depending on that a context switch might be more expensive.
