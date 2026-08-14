@@ -19,7 +19,7 @@ At a high level, imagine thread *A* switching from `Running` to `Ready`/`Waiting
 
 The steps depend on why *A* stopped (and the processor architecture), but the important ones are:
 
-1. Dispatcher selects the highest priority ready thread
+1. Dispatcher selects the highest priority ready thread for that processor
 2. Old thread is placed into its next scheduler state (preempted/quantum ended threads usually remain runnable, so they return to a ready queue of their priority, while blocking threads enter `Waiting` state)
 3. New thread becomes the standby thread selected for that processor
 4. Kernel saves state of the old thread to resume it later & restores the new threads state
@@ -84,7 +84,7 @@ IDA wasn't able to decompile `SwapContext`, so I've to use the disassembly inste
  */
 ```
 
-One important note is that when both threads belong to the same process, their user address space is already the same, but when they're from different processes, the switch must also use the new processs address space context. This can use more TLB (translation lookaside buffer)/cache, so depending on that a context switch might be more expensive.
+One important note is that when both threads belong to the same process, their user address space is already the same, but when they're from different processes, the switch must also use the new processs address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, so depending on that a context switch might be more expensive.
 
 ## CS Counters
 
@@ -127,7 +127,7 @@ You can see two different columns named `Context switches` & `Context switches d
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/si-context-switches-process.png?raw=true)
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/si-context-switches-thread.png?raw=true)
 
-- `Context switches` = cumulative context switch value currently stored for the process
+- `Context switches` = cumulative context switch value currently stored for the process/thread
 - `Context switches delta` = increase since previous refresh
 
 I've set both CPUStress threads to use the same CPU & be on the same priority, so they've to switch, this is equivalent to the single CPU example in '[Thread States, PerfMon Example](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/thread-states/#perfmon-example)':
