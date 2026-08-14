@@ -108,7 +108,7 @@ I've tried to create an readable function based on 23H2 assembly & WRK, this is 
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/ida-error.png?raw=true)
 
-## What Is Switched
+## What is switched
 
 A context switch switches the kernel stack, saves/restores selected thread state, changes the process address space when necessary, and updates the current CPUs scheduling state.
 
@@ -166,7 +166,11 @@ lkd> dt nt!_KTHREAD KernelStack
    +0x058 KernelStack     : Ptr64 Void
 ```
 
-One important note is that when both threads belong to the same process, their user address space is already the same, but when they're from different processes, the switch must also use the new processs address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, so depending on that a context switch might be more expensive.
+### Costs of a CS
+
+One cost is that when for example two threads use the same process address space, it doesn't need to be changed, but when they use different process address spaces, it also has to switch to the new process's address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, means a process context switch might be more expensive.
+
+Not complete yet.
 
 ## CS Counters
 
