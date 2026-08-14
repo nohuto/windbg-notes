@@ -136,7 +136,7 @@ I've set both CPUStress threads to use the same CPU & be on the same priority, s
 
 ## CPUStress Example
 
-CPUStress uses two threads, both use `THREAD_PRIORITY_TIME_CRITICAL` (priority `15`, see '[Relative Thread Priority](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/priority-levels/#relative-thread-priority)') as described under [Relative Thread Priority](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/priority-levels/#relative-thread-priority), and both are forced to run on processor 11 (affinity). As only one thread can execute on that logical processor at a time, they're switching between `Running`/`Ready` (see image above).
+CPUStress uses two threads, both use `THREAD_PRIORITY_TIME_CRITICAL` (priority `15`, see '[Relative Thread Priority](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/priority-levels/#relative-thread-priority)') as described under [Relative Thread Priority](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/priority-levels/#relative-thread-priority), and both are forced to run on processor 5 (affinity). As only one thread can execute on that logical processor at a time, they're switching between `Running`/`Ready` (see image above).
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/CPUStress-context-switches.png?raw=true)
 
@@ -152,16 +152,6 @@ PROCESS ffffe2814f8c6080
         THREAD ffffe2814d8de080  Cid 0f60.1870  Teb: 00000024211a3000 Win32Thread: 0000000000000000 RUNNING on processor 5 // TID 6256
         THREAD ffffe2814f3ce080  Cid 0f60.26d4  Teb: 00000024211a5000 Win32Thread: 0000000000000000 READY on processor 5 // TID 9940
 
-lkd> dt nt!_KAFFINITY_EX ffffe2814d8de080 Count Size Bitmap
-   +0x000 Count  : 6
-   +0x002 Size   : 0x88
-   +0x008 Bitmap : [1] 0xffffe281`4d8de088
-   
-lkd> dt nt!_KAFFINITY_EX ffffe2814f3ce080 Count Size Bitmap
-   +0x000 Count  : 6
-   +0x002 Size   : 0x88
-   +0x008 Bitmap : [1] 0xffffe281`4f3ce088
-
 lkd> dt nt!_KTHREAD ffffe2814d8de080 ContextSwitches State Priority BasePriority NextProcessor
    +0x0c3 Priority        : 8 ''
    +0x154 ContextSwitches : 0x5e5
@@ -175,6 +165,26 @@ lkd> dt nt!_KTHREAD ffffe2814f3ce080 ContextSwitches State Priority BasePriority
    +0x184 State           : 0x1 '' // Ready
    +0x218 NextProcessor   : 5
    +0x233 BasePriority    : 8 ''
+
+// from a different process so addresses are different
+
+lkd> dt nt!_KTHREAD ffffe28227f13580 Affinity UserAffinity // first CPUStress thread
+   +0x228 UserAffinity : 0xffffe282`27f13ea0 _KAFFINITY_EX
+   +0x240 Affinity     : 0xffffe282`27f13e90 _KAFFINITY_EX
+
+lkd> dt nt!_KTHREAD ffffe281e8978080 Affinity UserAffinity // second
+   +0x228 UserAffinity : 0xffffe281`e89789a0 _KAFFINITY_EX
+   +0x240 Affinity     : 0xffffe281`e8978990 _KAFFINITY_EX
+
+lkd> dt nt!_KAFFINITY_EX ffffe28227f13e90 Count Size Bitmap
+   +0x000 Count  : 1
+   +0x002 Size   : 1
+   +0x008 Bitmap : [1] 0x20 // bit 5
+
+lkd> dt nt!_KAFFINITY_EX ffffe281e8978990 Count Size Bitmap
+   +0x000 Count  : 1
+   +0x002 Size   : 1
+   +0x008 Bitmap : [1] 0x20 // bit 5
 ```
 
 ## CS Reasons
