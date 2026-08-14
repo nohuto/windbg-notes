@@ -52,7 +52,7 @@ lkd> dt nt!_KTHREAD ffffd88863435080 State
 
 ### _KWAIT_REASON
 
-The wait reason is useful whenever a thread is waiting (comments were taken from [ntdoc](https://ntdoc.m417z.com/kwait_reason)). It's possible to see CS/wait reasons via e.g. MXA:
+The wait reason is useful whenever a thread is waiting (comments were taken from [ntdoc](https://ntdoc.m417z.com/kwait_reason)). It's possible to see CS reasons via e.g. MXA (note that the list below is the kernels wait reason enum stored in `_KTHREAD.WaitReason`, some of them are used as CS reason):
 
 ![](https://github.com/nohuto/win-config/blob/main/system/images/WrQuantumEnd.png?raw=true)
 
@@ -109,57 +109,3 @@ See the current `WaitReason` of a thread via:
 lkd> dt nt!_KTHREAD ffffd88863435080 WaitReason
    +0x283 WaitReason : 0x6 '' // UserRequest
 ```
-
-#### WrPreempted
-
-A lower priority thread here gets preempted caused by, for example a higher priority thread becoming ready to run (wait completes, priority increased). Note that threads running in UM can preempt threads running in KM. Example of a thread with priority 16 getting preepmted from a thread with priority 18 which got ready, causing the lower priority thread to get sorted into the top of the r eady queue here. When the higher priority threads finished running, the lower priority thread can finish its quantum.
-
-![](https://github.com/nohuto/windbg-notes/blob/main/images/WrPreempted.png?raw=true)
-
-#### WrQuantumEnd
-
-Happens whenever a threads exhausts its quantum (`CycleTime >= QuantumTarget`), see '[Priority Seperation, Quantum](https://noverse.dev/docs/win-config/system/priority-separation/#quantum)' for details on modifying the quantum of FG/BG threads. If a thread uses its entire quantum, it depends on whenever there's another thread with the same priority (which would select that thread to run) for example, if not the thread gets another quantum.
-
-`WrQuantumEnd` (`30`) is used as the context switch reason when [`KiQuantumEnd`](https://github.com/nohuto/decompiled-pseudocode/tree/main/11-23H2/ntoskrnl/KiQuantumEnd.c) switches the running thread for another thread (old thread is placed back into a ready queue). [`KiUpdateRunTime`](https://github.com/nohuto/decompiled-pseudocode/tree/main/11-23H2/ntoskrnl/KiUpdateRunTime.c) requests `KiQuantumEnd` when the running threads cycle based `QuantumTarget` is reached:
-
-```c
-// KiUpdateRunTime
-
-result = CurrentThread->CycleTime;
-if ( result >= CurrentThread->QuantumTarget )
-  goto LABEL_23;
-```
-
-```c
-// KiUpdateRunTime
-
-LABEL_23:
-CurrentPrcb->QuantumEnd = 1;
-if ( !CurrentPrcb->NestingLevel )
-  return HalRequestSoftwareInterrupt(2);
-```
-
-For an expired quantum, `KiQuantumEnd` adds the next `QuantumTarget`, then sets `WaitReason` to `30` before returning the old thread to a ready queue and switching context:
-
-```c
-// KiQuantumEnd
-
-*(_QWORD *)(CurrentThread + 32) = v2 + KiCyclesPerClockQuantum * v3; // QuantumTarget = CycleTime + next quantum cycles
-```
-
-```c
-// KiQuantumEnd
-
-*(_BYTE *)(v72 + 643) = 30; // _KTHREAD.WaitReason = WrQuantumEnd
-KiQueueReadyThread((__int64)CurrentPrcb, (__int64 *)&v120, v72);
-KiAbProcessContextSwitch(v72, 1LL);
-IsUserVaAccessAllowed = KeIsUserVaAccessAllowed(0LL);
-if ( KeSmapEnabled )
-  __asm { stac }
-LOBYTE(v103) = 1;
-result = KiSwapContext(v72, NextThread, v103);
-```
-
-Note that `KiUpdateRunTime` also seems to request the same function for preferred heterogeneous processor changes (`KiCheckPreferredHeteroProcessor`), means `WrQuantumEnd` doesn't always (but usually) mean `CycleTime >= QuantumTarget`.
-
-![](https://github.com/nohuto/windbg-notes/blob/main/images/WrQuantumEnd.png?raw=true)

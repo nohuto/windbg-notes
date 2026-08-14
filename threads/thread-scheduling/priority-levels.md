@@ -72,7 +72,7 @@ As written at the beginning, a process doesn't run and doesn't compete with othe
 | `HIGH_PRIORITY_CLASS` | `3` | `13` |
 | `REALTIME_PRIORITY_CLASS` | `4` | `24` |
 
-Note that `_EPROCESS.PriorityClass` & `_KPROCESS.BasePriority` are separate fields, CSRSS (and Session Manager, SCM, LSASS) for example doesn't get its base `13` from the `PriorityClass`, it directly sets its current `ProcessBasePriority` to `13`, without changing `PriorityClass`. In that case the `ProcessBasePriority` is used by the threads (while normally the class selects its base). This is done before `CsrServerInitialization`, in [`csrss!main`](https://github.com/nohuto/decompiled-pseudocode/blob/main/11-22H2/csrss/main.c):
+Note that `_EPROCESS.PriorityClass` & `_KPROCESS.BasePriority` are separate fields, CSRSS (and Session Manager, SCM, LSASS) for example doesn't get its base `13` from the `PriorityClass`, it directly sets its current `ProcessBasePriority` to `13`, without changing `PriorityClass`. In that case the `ProcessBasePriority` is used by the threads (while normally the class selects its base). This is done before `CsrServerInitialization`, in [`csrss!main`](https://github.com/nohuto/decompiled-pseudocode/blob/main/11-23H2/csrss/main.c):
 
 ```c
 // main
@@ -112,7 +112,9 @@ fffff801`53c78680  00000018 00000006 0000000a // Real-Time 24, Below Normal 6, A
 
 ### Relative Thread Priority
 
-Each thread has a relative priority within its process class, ordinary values are `Highest` (`+2`), `Above normal` (`+1`), `Normal` (`0`), `Below normal` (`-1`), `Lowest` (`-2`) and `Time critical`/`Idle` which are saturation values, means they select the top or bottom of the variable/RT range (which you can see below as there are always blocks on the far left/right in the range):
+Each thread has a relative priority within its process class, ordinary values are `Highest` (`+2`), `Above normal` (`+1`), `Normal` (`0`), `Below normal` (`-1`), `Lowest` (`-2`) and `Time critical`/`Idle` which are saturation values, means they select the top or bottom of the variable/RT range (which you can see below as there are always blocks on the far left/right in the range).
+
+Whenever threads use `Time critical`/`Idle` and the process base priority gets changed, these threads keep their thread base priority anyway.
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/api-thread-priorities.png?raw=true)
 
