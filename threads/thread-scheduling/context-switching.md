@@ -119,8 +119,6 @@ The switched state is split between the kernel stack, thread/process structures 
 >
 > — Windows Internals, [E7, P1: 'Context switching'](https://github.com/nohuto/Windows-Books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)
 
-The relevant parameter and variable definitions provide a compact overview of the state used by the reconstruction:
-
 This section isn't complete yet and may be extended somewhat soon, the param/var definitions below show a short overview for now:
 
 ```c
@@ -157,6 +155,11 @@ __asm
   mov [OldThread->KernelStack], rsp
   mov rsp, [NewThread->KernelStack]
 }
+```
+
+```c
+lkd> dt nt!_KTHREAD KernelStack
+   +0x058 KernelStack     : Ptr64 Void
 ```
 
 One important note is that when both threads belong to the same process, their user address space is already the same, but when they're from different processes, the switch must also use the new processs address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, so depending on that a context switch might be more expensive.

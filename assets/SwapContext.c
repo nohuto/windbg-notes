@@ -1,9 +1,9 @@
 /*
  * XREFs of SwapContext @ 0x140428750
- * Callers:
+ * Functions that call SwapContext:
  *     KiIdleLoop @ 0x140423D50
  *     KiSwapContext @ 0x140428670
- * Callees:
+ * Functions called by SwapContext:
  *     HalRequestSoftwareInterrupt @ 0x140254DD0
  *     KiBeginThreadAccountingPeriod @ 0x140309040
  *     KiUpdateSpeculationControl @ 0x140325E50
@@ -11,7 +11,7 @@
  *     KiCheckVpBackingLongSpinWaitHypercall @ 0x1403CD4A0
  *     HvlNotifyLongSpinWait @ 0x1403CD4D0
  *     KeBugCheckEx @ 0x14041EDE0
- *     SwapContext @ 0x140428750 (32 in-function calls used to stuff the RSB)
+ *     SwapContext @ 0x140428750 (32 calls inside the function used to fill the RSB)
  *     KiClearLastBranchRecordStack @ 0x1404601D0
  *     KeCheckAndApplyBamQos @ 0x140461770
  *     HvlSwitchVirtualAddressSpace @ 0x140549F50
@@ -20,24 +20,12 @@
  *     KiSaveThreadIptState @ 0x140573350
  *     KiCheckAndApplyCacheIsolation @ 0x1405773E0
  *
- * Manually reconstructed from the Windows 11 23H2 assembly. The 11-22H2
- * and 11-23H2 versions contain the same 400 instructions and operands after
- * normalizing relocated addresses. A matching-symbol 22621.6199 image was
- * decompiled after neutralizing the stack pivot and inline RSB stuffing only
- * in a copied IDA database; every operation below was then checked against
- * the untouched 23H2 assembly.
- *
- * KiSwapContext and KiIdleLoop establish a custom register contract:
+ * KiSwapContext and KiIdleLoop pass values in these registers:
  *     rdi = old KTHREAD
  *     rsi = new KTHREAD
  *     rbx = current KPRCB
- *     cl  = APC-bypass/disable byte saved in the old thread's switch frame
+ *     cl  = APC bypass
  *     al  = return value
- *
- * This cannot be represented as ordinary C control flow. After rsp is loaded
- * from NewThread->KernelStack, execution continues on a frame saved by an
- * earlier invocation for that thread. Consequently, NewApcBypassWord below
- * comes from the new thread's saved frame, not from OldApcBypass.
  */
 
 unsigned __int8 __usercall SwapContext@<al>(
@@ -85,7 +73,7 @@ unsigned __int8 __usercall SwapContext@<al>(
     }
     _mm_pause();
   }
-  /* Claim NewThread only after its preceding switch-away has completed. */
+  /* Mark NewThread as running after its previous CS has finished */
   NewThread->Running = 1;
 
   if ( KiHresetMask )
@@ -126,11 +114,11 @@ unsigned __int8 __usercall SwapContext@<al>(
     KeCheckAndApplyBamQos(CurrentPrcb, NewThread);
   }
 
-  /* Save the old thread's architectural extended state. */
+  /* Save the old threads extended processor state */
   XStateMask = OldThread->NpxState & ~2ULL;
   if ( XStateMask )
   {
-    /* EDX:EAX contains XStateMask for each of the following instructions. */
+    /* EDX:EAX holds the XStateMask used by each instruction below */
     if ( _bittest64((const signed __int64 *)&FeatureBits, 38) )
     {
       __asm { xsaves  byte ptr [OldThread->StateSaveArea] }
@@ -154,9 +142,9 @@ unsigned __int8 __usercall SwapContext@<al>(
     KiSaveThreadIptState(OldThread);
 
   /*
-   * The real stack pivot. OldApcBypass was written to [rsp+28h] earlier
-   * in this invocation. After the second instruction,
-   * [rsp+28h] belongs to the new thread's earlier SwapContext frame.
+   * Switch kernel stacks. OldApcBypass was saved at [rsp+28h] near the start
+   * of this function. After rsp changes, [rsp+28h] refers to the value saved
+   * when NewThread last ran SwapContext.
    */
   __asm
   {
@@ -176,7 +164,7 @@ unsigned __int8 __usercall SwapContext@<al>(
     OldThread->KernelShadowStack = (void *)(OldShadowStackPointer - 8);
   }
 
-  /* KTHREAD/KPROCESS are the leading portions of ETHREAD/EPROCESS. */
+  /* ETHREAD starts with KTHREAD, EPROCESS starts with KPROCESS */
   OldEthread = (struct _ETHREAD *)OldThread;
   OldEprocess = (struct _EPROCESS *)OldThread->Process;
   if ( OldEprocess->WoW64Process )
@@ -188,7 +176,7 @@ unsigned __int8 __usercall SwapContext@<al>(
   if ( _bittestandreset((signed __int32 *)&NewThread->SpecCtrl, 1) )
     CurrentPrcb->BpbRetpolineState |= 1;
 
-  /* Preserve the low-byte process/pair tags consumed by speculation control. */
+  /* Keep the low byte process and pair tags used by speculation control */
   TaggedProcess = (unsigned __int64)NewThread->Process;
   LOBYTE(TaggedProcess) = (LOBYTE(TaggedProcess) | LOBYTE(CurrentPrcb->PairRegister)) & 0xC2;
   if ( TaggedProcess != (unsigned __int64)OldThread->Process )
@@ -216,15 +204,14 @@ unsigned __int8 __usercall SwapContext@<al>(
     if ( (TrappedBpbState & 0x40) != 0 ) // BpbTrappedFlushRsbOnRetpolineExit
     {
       /*
-       * Inline 32-call sequence at 0x14042898E..0x140428AAA. It fills the
-       * hardware return-stack buffer; each landing repairs rsp with add rsp,8
-       * before making the next nested call. There are no ordinary returns.
+       * Code at 0x14042898E-0x140428AAA makes 32 nested calls to fill the
+       * hardware return stack buffer. The sequence does not return normally.
        */
-      /* Pseudocode name for the exact inlined 32-call sequence. It is not a callee. */
+      /* Assembly does not call a function here */
       StuffReturnStackBufferWith32NestedCalls();
       if ( (CurrentPrcb->BpbFeatures & 8) != 0 ) // BpbKCet
       {
-        /* Discard the 32 corresponding CET shadow-stack return entries. */
+        /* Discard the 32 corresponding CET shadow stack return entries */
         __asm
         {
           mov eax, 20h
@@ -238,7 +225,7 @@ unsigned __int8 __usercall SwapContext@<al>(
     _enable();
   }
 
-  /* Switch the active/attached process address space when necessary. */
+  /* Switch address spaces if the threads use different processes */
   NewAddressProcess = NewThread->ApcState.Process;
   OldAddressProcess = OldThread->ApcState.Process;
   if ( NewAddressProcess != OldAddressProcess )
@@ -284,7 +271,7 @@ unsigned __int8 __usercall SwapContext@<al>(
       CurrentPrcb->GroupIndex);
   }
 
-  /* KPRCB is embedded at KPCR+0x180 in this build. */
+  /* KPRCB is embedded at KPCR+0x180 in this build */
   CurrentPcr = CONTAINING_RECORD(CurrentPrcb, struct _KPCR, Prcb);
   InitialStack = (unsigned __int64)NewThread->InitialStack;
   if ( (KiKvaShadow & 1) != 0 )
@@ -320,13 +307,13 @@ unsigned __int8 __usercall SwapContext@<al>(
               | (OldThread->NpxState & 0x40000)
               | (OldThread->NpxState & KeEnabledSupervisorXStateFeatures);
 
-  /* All old state that must be saved has been consumed; release its run claim. */
+  /* Required old thread state is now saved, so mark OldThread as not running */
   OldThread->Running = 0;
 
   RestoreMask &= ~2ULL;
   if ( RestoreMask )
   {
-    /* EDX:EAX contains RestoreMask for each restore instruction. */
+    /* EDX:EAX holds the RestoreMask used by each restore instruction */
     if ( _bittest64((const signed __int64 *)&FeatureBits, 41) && (RestoreMask & 1) != 0 )
       __asm { fninit }
 
@@ -396,7 +383,7 @@ unsigned __int8 __usercall SwapContext@<al>(
     __writemsr(0xC0000102, UserGsBase); // IA32_KERNEL_GS_BASE
   }
 
-  if ( (CurrentPrcb->DpcRequestSummary & 0x10001) != 0 ) // normal or threaded DPC active
+  if ( (CurrentPrcb->DpcRequestSummary & 0x10001) != 0 ) // normal/threaded DPC active
     KeBugCheckEx(0xB8, (ULONG_PTR)OldThread, (ULONG_PTR)NewThread, 0, 0);
 
   ++NewThread->ContextSwitches;
@@ -405,17 +392,17 @@ unsigned __int8 __usercall SwapContext@<al>(
     return 0;
 
   /*
-   * This is a 16-bit load in the modern assembly. Its low byte is the
-   * ApcBypass field saved when NewThread previously switched away.
+   * Modern assembly loads 16 bits here. The low byte is the ApcBypass
+   * value saved when NewThread last switched out.
    */
   __asm { movzx NewApcBypassWord, word ptr [rsp+28h] }
   if ( (NewApcBypassWord | (unsigned __int16)NewThread->SpecialApcDisable) == 0 )
   {
-    /* Tell the resumed caller, normally KiSwapContext, to deliver the APC. */
+    /* Return 1 so the caller, normally KiSwapContext, delivers the APC */
     return 1;
   }
 
-  /* APC delivery is disabled here; defer it through an APC-level interrupt. */
+  /* APC delivery is disabled here, so request an APC level interrupt */
   HalRequestSoftwareInterrupt(1); // APC_LEVEL
   return 0;
 }
