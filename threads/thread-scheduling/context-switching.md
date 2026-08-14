@@ -8,7 +8,7 @@ Some common reasons for a CS are:
 
 - Running thread waits/blocks
 - Running thread terminates or yields execution
-- Its quantum expires and another thread is ready
+- Its quantum expires and another thread with at least the same priority is ready
 - Higher priority thread becomes ready and preempts the running thread
 
 ## Thread Selection
@@ -102,7 +102,7 @@ __int64 __fastcall KiSwapContext(__int64 a1, __int64 a2, unsigned int a3)
 
 `SwapContext` saves the old state, changes stacks and restores the new state, IDA isn't able to decompile the functions as it changes `rsp`.
 
-I've tried to create an readable function based on 23H2 disassembly & WRK, this is currently the first attempt so it may not be accurate yet.
+I've tried to create an readable function based on 23H2 assembly & WRK, this is currently my first attempt so it may not be accurate yet.
 
 - [SwapContext.c](https://github.com/nohuto/windbg-notes/blob/main/assets/SwapContext.c)
 
@@ -110,12 +110,14 @@ I've tried to create an readable function based on 23H2 disassembly & WRK, this 
 
 ## What Is Switched
 
-The switched state is split between the kernel stack, thread/process structures and processor-local state.
+A context switch switches the kernel stack, saves/restores selected thread state, changes the process address space when necessary, and updates the current CPUs scheduling state.
 
 > "*A typical context switch requires saving and reloading the following data:*  
 > *- Instruction pointer*  
 > *- Kernel stack pointer*  
-> *- A pointer to the address space in which the thread runs (the process’s page table directory)*"
+> *- A pointer to the address space in which the thread runs (the process’s page table directory)*  
+>
+> *The kernel saves this information from the old thread by pushing it onto the current (old thread’s) kernel-mode stack, updating the stack pointer, and saving the stack pointer in the old thread’s KTHREAD structure. The kernel stack pointer is then set to the new thread’s kernel stack, and the new thread’s context is loaded. If the new thread is in a different process, it loads the address of its page table directory into a special processor register so that its address space is available. If a kernel APC that needs to be delivered is pending, an interrupt at IRQL 1 is requested. Otherwise, control passes to the new thread’s restored instruction pointer and the new thread resumes execution.*"
 >
 > — Windows Internals, [E7, P1: 'Context switching'](https://github.com/nohuto/Windows-Books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)
 
