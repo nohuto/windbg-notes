@@ -20,12 +20,12 @@
  *     KiSaveThreadIptState @ 0x140573350
  *     KiCheckAndApplyCacheIsolation @ 0x1405773E0
  *
- * KiSwapContext and KiIdleLoop pass values in these registers:
+ * KiSwapContext & KiIdleLoop pass values in these registers:
  *     rdi = old KTHREAD
  *     rsi = new KTHREAD
  *     rbx = current KPRCB
- *     cl  = APC bypass
- *     al  = return value
+ *     cl = APC bypass
+ *     al = return value
  */
 
 unsigned __int8 __usercall SwapContext@<al>(

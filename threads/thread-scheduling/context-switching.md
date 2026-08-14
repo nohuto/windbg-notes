@@ -98,7 +98,7 @@ __int64 __fastcall KiSwapContext(__int64 a1, __int64 a2, unsigned int a3)
 }
 ```
 
-### SwapContext
+### [SwapContext](https://github.com/nohuto/windbg-notes/blob/main/assets/SwapContext.c)
 
 `SwapContext` saves the old state, changes stacks and restores the new state, IDA isn't able to decompile the functions as it changes `rsp`.
 
@@ -119,9 +119,11 @@ The switched state is split between the kernel stack, thread/process structures 
 >
 > — Windows Internals, [E7, P1: 'Context switching'](https://github.com/nohuto/Windows-Books/releases/download/7th-Edition/Windows-Internals-E7-P1.pdf)
 
-This section isn't complete yet and may be extended somewhat soon, the param/var definitions below show a short overview for now:
+This section isn't complete yet and may be extended somewhat soon, the param/var definitions below show a short overview for now (from [SwapContext](https://github.com/nohuto/windbg-notes/blob/main/assets/SwapContext.c)):
 
 ```c
+// SwapContext
+
 unsigned __int8 __usercall SwapContext@<al>(
         struct _KTHREAD *OldThread@<rdi>,
         struct _KTHREAD *NewThread@<rsi>,
