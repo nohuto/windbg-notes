@@ -20,7 +20,7 @@ At a high level, imagine thread *A* switching from `Running` to `Ready`/`Waiting
 The steps depend on why *A* stopped (and the processor architecture), but the important ones are:
 
 1. Dispatcher selects the highest priority ready thread for that processor
-2. Old thread is placed into its next scheduler state (preempted/quantum ended threads usually remain runnable, so they return to a ready queue of their priority, while blocking threads enter `Waiting` state)
+2. Old thread is placed into its next state (preempted/quantum ended threads usually remain runnable, so they return to a `Ready` queue of their priority, while waiting/blocking threads enter `Waiting` state)
 3. New thread becomes the standby thread selected for that processor
 4. Kernel saves state of the old thread to resume it later & restores the new threads state
 5. Processors current thread becomes the new thread, which enters `Running` and executes
@@ -30,7 +30,7 @@ Per processor pointers are stored in [`_KPRCB`](https://noverse.dev/docs/windbg-
 ```c
 lkd> dt nt!_KPRCB CurrentThread NextThread IdleThread KeContextSwitches
    +0x008 CurrentThread      : Ptr64 _KTHREAD // currently executing
-   +0x010 NextThread         : Ptr64 _KTHREAD // pointer to the next thread
+   +0x010 NextThread         : Ptr64 _KTHREAD // pointer to next thread
    +0x018 IdleThread         : Ptr64 _KTHREAD // used when theres no thread executing
    +0x2d3c KeContextSwitches : Uint4B // cumulative switch counter
 
@@ -49,6 +49,12 @@ lkd> dt nt!_KPRCB CurrentThread NextThread IdleThread KeContextSwitches ffffb901
    +0x018 IdleThread        : 0xffffe281`42547080 _KTHREAD
    +0x2d3c KeContextSwitches : 0x726627
 ```
+
+### MXA
+
+Each colored block below represents an interval in which a thread was scheduled on a logical processor, and the borders between them are CS events (`Reason`). MXA gets the duration from between CSwitch events, so I guess that the CS duration itself is included in the thread duration time.
+
+![](https://github.com/nohuto/windbg-notes/blob/main/images/MXA-CS.png?raw=true)
 
 ## CS Functions
 
@@ -168,7 +174,7 @@ lkd> dt nt!_KTHREAD KernelStack
 
 ### Costs of a CS
 
-One cost is that when for example two threads use the same process address space, it doesn't need to be changed, but when they use different process address spaces, it also has to switch to the new process's address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, means a process context switch might be more expensive.
+One cost is that when for example two threads use the same process address space, it doesn't need to be changed, but when they use different process address spaces, it also has to switch to the new process's address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, means a process context switch might be more expensive (probably only a few hundred nanoseconds).
 
 Not complete yet.
 
