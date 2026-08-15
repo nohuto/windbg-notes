@@ -10,6 +10,7 @@ Some common reasons for a CS are:
 - Running thread terminates or yields execution
 - Its quantum expires and another thread with at least the same priority is ready
 - Higher priority thread becomes ready and preempts the running thread
+- [Additional GDK notes](https://learn.microsoft.com/en-us/gaming/gdk/docs/gdk-dev/console-dev/overviews/threads/high-context-switches?view=gdk-2604#common-causes-of-high-context-switch-counts)
 
 ## Thread Selection
 
@@ -52,7 +53,7 @@ lkd> dt nt!_KPRCB CurrentThread NextThread IdleThread KeContextSwitches ffffb901
 
 ### MXA
 
-Each colored block below represents an interval in which a thread was scheduled on a logical processor, and the borders between them are CS events (`Reason`). MXA gets the duration from between CSwitch events, so I guess that the CS duration itself is included in the thread duration time.
+Each colored block below represents an interval in which a thread was scheduled on a logical processor, and the borders between them are CS events (`Reason`). When looking at [SwapContext](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/context-switching/#swapcontext) we can see that before/after the ETW timestamp several things (saved old thread state, switched kernel stacks, restores new thread state...) already happened, means the CS time of a thread may not be completely included in its thread duration block. 
 
 ![](https://github.com/nohuto/windbg-notes/blob/main/images/MXA-CS.png?raw=true)
 
@@ -173,6 +174,13 @@ lkd> dt nt!_KTHREAD KernelStack
 ```
 
 ### Costs of a CS
+
+The GDK docs here tell a CS time of 5 us, while a old [blog](https://devblogs.microsoft.com/premier-developer/the-cost-of-context-switches/) shows ~2.74 us, obviously the time depends on the hardware/thread-thread/process-process (as described below) switches etc., so that time can only be used as a rough idea for now.
+
+> "*Use this topic to learn how to find threads that are frequently context switching—degrading your title's performance. Context switching is the process of storing the state of a thread so that it can be restored to resume execution at a later point in time. Rapid context switching between threads is expensive in terms of CPU utilization. Each context switch takes the kernel about 5 μs (on average) to process. However, the resulting [Cache misses](https://en.wikipedia.org/wiki/CPU_cache#Cache_miss) add additional execution time that is difficult to quantify. The more frequent the context switches, the more your CPU utilization degrades. Each title is different, but a reasonable goal is to have fewer than 1,000 context switches per second, per core.*
+>
+> 
+> — Microsoft, [High context switch rate](https://learn.microsoft.com/en-us/gaming/gdk/docs/gdk-dev/console-dev/overviews/threads/high-context-switches?view=gdk-2604)
 
 One cost is that when for example two threads use the same process address space, it doesn't need to be changed, but when they use different process address spaces, it also has to switch to the new process's address space context. This can cause higher TLB (translation lookaside buffer) costs & reduce cache locality, means a process context switch might be more expensive (probably only a few hundred nanoseconds).
 
