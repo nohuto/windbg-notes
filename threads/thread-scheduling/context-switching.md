@@ -175,7 +175,7 @@ lkd> dt nt!_KTHREAD KernelStack
 
 ### Costs of a CS
 
-The GDK docs here tell a CS time of 5 us, while a old [blog](https://devblogs.microsoft.com/premier-developer/the-cost-of-context-switches/) shows ~2.74 us, obviously the time depends on the hardware/thread-thread/process-process (as described below) switches etc., so that time can only be used as a rough idea for now.
+GDK docs shows a average CS time of 5 us, while a old [blog](https://devblogs.microsoft.com/premier-developer/the-cost-of-context-switches/) ~2.74 us, obviously the time depends on the hardware/thread-thread/process-process (as described below) switches etc., so that time can only be used as a rough idea for now.
 
 > "*Use this topic to learn how to find threads that are frequently context switching—degrading your title's performance. Context switching is the process of storing the state of a thread so that it can be restored to resume execution at a later point in time. Rapid context switching between threads is expensive in terms of CPU utilization. Each context switch takes the kernel about 5 μs (on average) to process. However, the resulting [Cache misses](https://en.wikipedia.org/wiki/CPU_cache#Cache_miss) add additional execution time that is difficult to quantify. The more frequent the context switches, the more your CPU utilization degrades. Each title is different, but a reasonable goal is to have fewer than 1,000 context switches per second, per core.*
 >
