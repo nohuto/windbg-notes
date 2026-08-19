@@ -54,7 +54,7 @@ lkd> dt nt!_KTHREAD ffffd88863435080 State
 
 The wait reason is useful whenever a thread is waiting (comments were taken from [ntdoc](https://ntdoc.m417z.com/kwait_reason)). It's possible to see CS reasons via e.g. MXA (note that the list below is the kernels wait reason enum stored in `_KTHREAD.WaitReason`, several of them are used as CS reason):
 
-![](https://github.com/nohuto/win-config/blob/main/system/images/WrQuantumEnd.png?raw=true)
+![](https://github.com/nohuto/win-config/blob/main/system/images/WrQuantumEnd-23H2.png?raw=true)
 
 See ['*Context Switching, CS Reasons*'](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/context-switching/#cs-reasons) for details on some reasons.
 

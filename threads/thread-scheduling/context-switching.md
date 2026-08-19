@@ -291,7 +291,7 @@ lkd> dt nt!_KAFFINITY_EX ffffe281e8978990 Count Size Bitmap
 
 See [_KWAIT_REASON](https://noverse.dev/docs/windbg-notes/threads/thread-scheduling/thread-states/#_kwait_reason) for more wait reasons, as written in that section, not all fields in the type are CS reasons.
 
-![](https://github.com/nohuto/win-config/blob/main/system/images/WrQuantumEnd.png?raw=true)
+![](https://github.com/nohuto/win-config/blob/main/system/images/WrQuantumEnd-23h2.png?raw=true)
 
 Note that MXA shows `OldThreadWaitReason` values from CSwitch events.
 
